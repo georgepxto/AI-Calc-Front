@@ -48,6 +48,17 @@ def paint_clock(painter: QPainter, rect: QRectF, color: QColor) -> None:
     painter.drawLine(center, center + QPointF(11 * unit, 7 * unit))
 
 
+def paint_menu(painter: QPainter, rect: QRectF, color: QColor) -> None:
+    """Três linhas (ícone do menu de modos, como na Calculadora do Windows)."""
+    unit = min(rect.width(), rect.height()) / 64
+    center = rect.center()
+    pen = QPen(color, 5 * unit, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+    painter.setPen(pen)
+    for dy in (-16, 0, 16):
+        y = center.y() + dy * unit
+        painter.drawLine(QPointF(center.x() - 22 * unit, y), QPointF(center.x() + 22 * unit, y))
+
+
 def paint_app_icon(painter: QPainter, size: int) -> None:
     """Ícone do AI Calc: uma calculadora cujo visor mostra a onda do seno.
 

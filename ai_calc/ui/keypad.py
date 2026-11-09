@@ -176,6 +176,12 @@ class Keypad(QWidget):
         key_w = int(min(key_h * m.aspect, room_w / cols))
         return key_h, key_w
 
+    def max_grid_width(self) -> int:
+        """Largura das teclas no tamanho máximo (sem a folga)."""
+        m = self._metrics
+        key_w = int(m.max_key * m.aspect)
+        return self._columns * key_w + (self._columns - 1) * m.gap
+
     def grid_height(self, width: float, height: float) -> int:
         """Altura que as teclas ocupam (com a folga) numa área width × height."""
         key_h, _ = self._key_size(width, height)

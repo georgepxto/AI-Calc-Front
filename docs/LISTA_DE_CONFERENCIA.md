@@ -124,8 +124,8 @@ conta ou da primeira mudança de tema, modo ou aba.
 - [ ] No executável, na aba **Comum**, digite `200 ×`. Abra **Porcentagem**,
       calcule **36 de 240** e confira `15%`. Clique em **Usar resultado** e
       depois em `=`. O visor deve mostrar `30`.
-- [ ] Em **Variação (%)**, calcule de 240 para 204 e confira `−15%`.
-- [ ] Em **Valor original**, informe 150 e desconto de 25% e confira `200`.
+- [ ] Em **Variação**, calcule de 240 para 204 e confira `−15%`.
+- [ ] Em **Desconto** (valor original), informe 150 e desconto de 25% e confira `200`.
       Repita com `25,0` e `25.0`.
 - [ ] Informe total ou valor inicial zero, desconto de 100% ou um campo
       inválido. Confira a mensagem de erro e o bloqueio da inserção.

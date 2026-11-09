@@ -15,6 +15,8 @@ from .theme import ROLE_COLORS, ThemeManager
 
 TAB_PADDING = 8
 TAB_HEIGHT = 40
+ROW_HEIGHT = 44        # altura de cada opção na lista vertical (menu de modos)
+LIST_RADIUS = 18       # cantos da lista vertical
 TAB_INSET = 3          # espaço entre a borda da cápsula e a lente
 LENS_MS = 380          # deslize da lente até a opção escolhida (com mola, como no iOS 26)
 LENS_OVERSHOOT = 0.9   # quanto a lente passa do ponto antes de assentar
@@ -45,8 +47,14 @@ class GlassTabBar(QTabBar):
         self.currentChanged.connect(self._slide_lens)
 
     # --- tamanho ---
+    @property
+    def vertical(self) -> bool:
+        return self.shape() in (QTabBar.Shape.RoundedWest, QTabBar.Shape.RoundedEast)
+
     def tabSizeHint(self, index: int) -> QSize:  # noqa: N802 (nome do Qt)
         width = QFontMetrics(self.font()).horizontalAdvance(self.tabText(index))
+        if self.vertical:
+            return QSize(max(self.minimumWidth(), width + 4 * TAB_PADDING), ROW_HEIGHT)
         return QSize(width + 2 * TAB_PADDING, TAB_HEIGHT)
 
     def minimumTabSizeHint(self, index: int) -> QSize:  # noqa: N802 (nome do Qt)
@@ -56,6 +64,10 @@ class GlassTabBar(QTabBar):
     def _lens_rect(self, index: int) -> QRectF:
         tab = QRectF(self.tabRect(index))
         inset = TAB_INSET + 1
+        if self.vertical:
+            top = inset if index == 0 else 2
+            bottom = inset + 2 if index == self.count() - 1 else 2
+            return tab.adjusted(inset, top, -inset, -bottom)
         return tab.adjusted(inset, inset, -inset, -(inset + 2))
 
     def _slide_lens(self, index: int) -> None:
@@ -118,10 +130,11 @@ class GlassTabBar(QTabBar):
         if self.count() == 0:
             return
 
-        # Cápsula que envolve todas as opções.
+        # Cápsula que envolve todas as opções (na lista vertical, um retângulo arredondado).
         fill_key, _, _, alpha, _ = ROLE_COLORS["tab"]
         track = QRectF(self.rect()).adjusted(1, 1, -1, -3)
-        paint_glass(painter, track, capsule_radius(track), theme, theme.hex(fill_key), alpha)
+        track_radius = LIST_RADIUS if self.vertical else capsule_radius(track)
+        paint_glass(painter, track, track_radius, theme, theme.hex(fill_key), alpha)
 
         # Lente da opção escolhida (deslizando, se estiver em movimento).
         current = self.currentIndex()
@@ -141,4 +154,9 @@ class GlassTabBar(QTabBar):
                 role = "tab"
             color = theme.color(ROLE_COLORS[role][2])
             painter.setPen(color)
-            painter.drawText(self._lens_rect(index), Qt.AlignmentFlag.AlignCenter, self.tabText(index))
+            if self.vertical:
+                text_rect = self._lens_rect(index).adjusted(2 * TAB_PADDING, 0, 0, 0)
+                align = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+            else:
+                text_rect, align = self._lens_rect(index), Qt.AlignmentFlag.AlignCenter
+            painter.drawText(text_rect, align, self.tabText(index))

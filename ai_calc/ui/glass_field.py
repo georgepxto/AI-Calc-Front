@@ -10,7 +10,7 @@ from .glass import paint_focus_ring, paint_glass, set_text_color
 from .theme import KEY_ALPHA, ThemeManager
 
 FIELD_RADIUS = 999     # campo em cápsula (o raio é limitado à metade da altura)
-FIELD_HEIGHT = 40
+FIELD_HEIGHT = 44
 TEXT_POINT_SIZE = 11
 TEXT_MIN_POINT_SIZE = 8     # texto longo diminui até aqui antes de rolar dentro do campo
 

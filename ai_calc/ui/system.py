@@ -22,3 +22,27 @@ def reduce_motion() -> bool:
         return bool(ok) and not enabled.value
     except Exception:  # sem acesso à API: segue com animações
         return False
+
+
+# DwmSetWindowAttribute: barra de título escura (Windows 10 20H1 em diante e Windows 11).
+_DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+
+
+def set_dark_title_bar(window, dark: bool) -> None:
+    """Deixa a barra de título do Windows escura no tema escuro (e clara no claro).
+
+    Sem isso, a barra continua branca por cima do app escuro. Fora do Windows, ou se a
+    API não existir, não faz nada.
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+
+        hwnd = int(window.winId())
+        value = ctypes.c_int(1 if dark else 0)
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            hwnd, _DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+        )
+    except Exception:  # API ausente: a barra fica no padrão do sistema
+        pass

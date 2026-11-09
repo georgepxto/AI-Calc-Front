@@ -177,6 +177,18 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
   `Keypad.set_selected`); lente das abas e gaveta do histórico com mola. Tudo some com
   "reduzir movimento".
 - Histórico: lista com divisórias num painel só; como gaveta, tem base sólida (sem "fantasmas").
+- Topo: menu de modos (`ui/nav_menu.py`, `NavMenu`/`NavCard`) aberto pelo ☰ (`MenuButton`), como
+  na Calculadora do Windows; o `GlassTabBar` virou a lista vertical dentro do cartão
+  (`RoundedWest`) e o nome do modo aparece em `mode_title`. Esc, clique fora ou escolher um modo
+  fecha o menu. O topo não muda mais de tamanho ao trocar de modo.
+- Tela grande: `MainWindow.body` (calculadora + histórico) é centralizado em `_place_body` com
+  tamanho máximo (`BODY_MAX_HEIGHT` nas abas com teclado, `TRIG_MAX_SIZE` na Trigonometria).
+- Escuro: `glass_rim` escurecido (`#5C5C63`) para os reflexos não virarem bordas claras;
+  `system.set_dark_title_bar` deixa a barra de título do Windows escura (DWM).
+- Porcentagem: painel sólido sobre o visor e o teclado (`MainWindow.percentage_area`), opções
+  "Parte | Variação | Desconto" (nome completo na dica), resultado grande numa área de altura
+  fixa e "Usar resultado" laranja.
+- Contorno de foco (teclas e abas) só quando o foco veio do teclado (Tab).
 
 ## Interface (Etapas 3 e 4)
 

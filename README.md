@@ -58,8 +58,11 @@ etapas pequenas, cada uma com testes automáticos.
   funções à esquerda do mesmo teclado.
 - Animações como as da Apple: a tecla estufa ao apertar e volta com efeito de mola, e o operador
   escolhido fica destacado até a próxima tecla.
-- Abas num controle segmentado, com a aba escolhida numa "lente" que desliza até ela; os botões
-  de histórico e de tema ficam juntos numa cápsula ao lado. O botão Porcentagem fica no visor.
+- Os modos (Comum, Científica, Trigonometria) ficam num menu ☰, como na Calculadora do Windows,
+  com o nome do modo atual ao lado; histórico e tema ficam numa cápsula à direita. O botão
+  Porcentagem fica no visor.
+- Em tela cheia, a calculadora e o histórico ficam juntos e centralizados. No tema escuro, a
+  barra de título do Windows também fica escura.
 - Transição de tema de 450 ms. Um segundo clique no meio da transição a faz voltar do ponto em
   que estava.
 - Abre seguindo o tema do Windows. Depois de escolhido no botão de lua/sol, vale o tema escolhido.

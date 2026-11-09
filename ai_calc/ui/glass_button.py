@@ -8,7 +8,7 @@ from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPainterPath
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QWidget
 
 from .glass import capsule_radius, paint_focus_ring, paint_glass, with_alpha
-from .icons import paint_clock, paint_moon, paint_sun
+from .icons import paint_clock, paint_menu, paint_moon, paint_sun
 from .theme import HOVER_ALPHA, KEY_ALPHA, ROLE_COLORS, ThemeManager, mix
 
 KEY_RADIUS = 999       # teclas em cápsula (o raio é limitado à metade da altura)
@@ -44,6 +44,7 @@ class GlassButton(QPushButton):
         self._hover = 0.0
         self._selected = 0.0
         self._was_down = False
+        self._keyboard_focus = False
         self.pad = 0           # folga em volta (o teclado reserva espaço para a tecla crescer)
         self.setProperty("role", role)
         self.setFocusPolicy(Qt.FocusPolicy.TabFocus)
@@ -70,6 +71,22 @@ class GlassButton(QPushButton):
     @property
     def role(self) -> str:
         return self._role
+
+    @property
+    def keyboard_focus(self) -> bool:
+        return self.hasFocus() and self._keyboard_focus
+
+    # Contorno de foco só quando o foco veio do teclado (Tab), não ao abrir a janela.
+    def focusInEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
+        super().focusInEvent(event)
+        self._keyboard_focus = event.reason() in (
+            Qt.FocusReason.TabFocusReason, Qt.FocusReason.BacktabFocusReason,
+            Qt.FocusReason.ShortcutFocusReason,
+        )
+
+    def focusOutEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
+        super().focusOutEvent(event)
+        self._keyboard_focus = False
 
     def resizeEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
         super().resizeEvent(event)
@@ -200,7 +217,7 @@ class GlassButton(QPushButton):
         else:
             paint_glass(painter, rect, radius, theme, fill, alpha, hover)
         self.paint_content(painter, rect, text_color)
-        if self.hasFocus():
+        if self.hasFocus() and self._keyboard_focus:
             paint_focus_ring(painter, rect, radius, theme.color(focus_key))
 
     def radius(self, rect: QRectF) -> float:
@@ -257,6 +274,23 @@ class HistoryToggleButton(GlassButton):
         paint_clock(painter, icon_rect, color)
 
 
+class MenuButton(GlassButton):
+    """Botão ☰ que abre o menu de modos (Comum, Científica, Trigonometria)."""
+
+    def __init__(self, theme: ThemeManager, parent: QWidget | None = None) -> None:
+        super().__init__("", theme, role="theme", parent=parent, flat=True)
+        self.setObjectName("menuButton")
+        self.setAccessibleName("Abrir menu de modos")
+        self.setToolTip("Modos da calculadora")
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.setFixedSize(QSize(TOOL_SIZE, TOOL_SIZE))
+
+    def paint_content(self, painter: QPainter, rect: QRectF, color) -> None:
+        icon_rect = QRectF(0, 0, 20, 20)
+        icon_rect.moveCenter(rect.center())
+        paint_menu(painter, icon_rect, color)
+
+
 class ToolGroup(QWidget):
     """Cápsula de vidro que agrupa os botões redondos do topo (histórico e tema)."""
 
@@ -268,7 +302,8 @@ class ToolGroup(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self._layout = QHBoxLayout(self)
         pad = self.PADDING
-        self._layout.setContentsMargins(pad, pad, pad, pad + 2)    # +2: sombra embaixo
+        # 2 em cima e 4 embaixo: com a sombra, o grupo tem os mesmos 40 px das outras peças do topo.
+        self._layout.setContentsMargins(pad, 2, pad, 4)
         self._layout.setSpacing(2)
 
     def add(self, button: QWidget) -> None:

@@ -213,3 +213,9 @@ Funções exigem parênteses (`sin 30` mostra "Use parênteses: sin(30)").
   ao apertar e volta com efeito de mola; o operador escolhido fica destacado (fundo claro, símbolo
   laranja) até a próxima tecla; lente das abas e gaveta do histórico com mola. Com "reduzir
   movimento", tudo é instantâneo.
+- Modos num menu ☰ à esquerda do topo (como na Calculadora do Windows), com o nome do modo atual
+  ao lado; substitui o controle segmentado no topo, que mudava de tamanho a cada troca.
+- Tela cheia: calculadora e histórico juntos e centralizados, com tamanho máximo.
+- Tema escuro: reflexos do vidro mais discretos e barra de título do Windows escura.
+- Porcentagem: o painel cobre o visor e o teclado (fundo sólido), as opções passam a se chamar
+  "Parte", "Variação" e "Desconto" (nome completo na dica) e o resultado aparece em destaque.
