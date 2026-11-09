@@ -185,3 +185,52 @@ def test_limite_de_500_caracteres():
     editor = ExpressionEditor()
     digitar(editor, "1" * 600)
     assert len(editor.expression) == 500
+
+
+# --- tecla "( )" (abre ou fecha, conforme a conta) ---------------------------------
+def _parenteses(*teclas):
+    editor = ExpressionEditor()
+    for tecla in teclas:
+        if tecla == "()":
+            editor.parenthesis()
+        else:
+            editor.insert(tecla)
+    return editor.expression
+
+
+def test_parenteses_abre_no_comeco():
+    assert _parenteses("()") == "("
+
+
+def test_parenteses_fecha_depois_de_numero():
+    assert _parenteses("()", "2", "+", "3", "()") == "(2+3)"
+
+
+def test_parenteses_abre_depois_de_operador():
+    assert _parenteses("2", "×", "()") == "2×("
+
+
+def test_parenteses_sem_nada_aberto_abre():
+    assert _parenteses("2", "()") == "2("
+
+
+def test_parenteses_aninhados():
+    assert _parenteses("()", "()", "1", "()", "()") == "((1))"
+
+
+def test_parenteses_fecha_depois_de_constante_e_porcentagem():
+    assert _parenteses("()", "π", "()") == "(π)"
+    assert _parenteses("()", "1", "0", "%", "()") == "(10%)"
+
+
+def test_parenteses_fecha_funcao_aberta():
+    assert _parenteses("sin(", "3", "0", "()") == "sin(30)"
+
+
+def test_parenteses_depois_do_igual_comeca_conta_nova():
+    editor = ExpressionEditor()
+    for tecla in "2+3":
+        editor.insert(tecla)
+    editor.evaluate()
+    assert editor.parenthesis() == "("
+    assert editor.expression == "("

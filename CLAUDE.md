@@ -147,6 +147,47 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
 - Testes: `tests/ajudantes.py` (`distancia` entre cores, usada pelos testes de janela).
 - Fluxo de trabalho: uma branch por etapa, PR no GitHub e merge depois do ok do Francisco.
 
+## Redesign estilo calculadora do macOS (feito)
+
+- Branch `redesign-liquid-glass`. Referência aprovada pelo George: "Opção B · macOS Tahoe
+  refinado" no canvas de design "AI Calc · Liquid Glass".
+- Paleta (`theme.py`): fundo liso grafite `#1C1C1E` (escuro) e `#EFEFF4` (claro); números em
+  cinza (`key_bg`), funções em cinza mais escuro (`function_bg`), controles (`⌫ AC %`) em cinza
+  mais claro (`action_bg`) e operadores/"=" no laranja original da Apple (`#FF9500` no claro,
+  `#FF9F0A` no escuro) com símbolo branco. Esse laranja dá ~2:1 com o branco: escolha de design
+  do George; o teste de contraste aceita 1,8:1 só para operadores e "=" (comentado no teste).
+  O resto continua com 4,5:1 (texto) e 3:1 (foco e ícones).
+- Superfícies opacas (`KEY_ALPHA = 1`) e reflexos discretos: fio de luz em cima (`RIM_ALPHA`),
+  contorno leve (`EDGE_ALPHA`), sombra curta, sem reflexo embaixo (`GLINT_ALPHA = 0`).
+- Topo (como no macOS): botão de barra lateral à esquerda (`HistoryToggleButton`), seletor de
+  modo no centro (`ModeButton`, "Científica ⌄", também em `mode_title`) e tema à direita. O
+  seletor abre o menu de modos (`ui/nav_menu.py`), um cartão logo abaixo dele com o `GlassTabBar`
+  na vertical; Esc, clique fora ou escolher um modo fecha. O topo não muda ao trocar de modo
+  (as duas abas com teclado usam a mesma largura máxima).
+- Histórico: barra lateral plana encostada à esquerda (`PANEL_WIDTH` 260), com um fio separando
+  da calculadora e lixeira (`TrashButton`) para limpar. Janela larga: o botão de barra lateral
+  esconde/mostra (`_sidebar_hidden`); estreita: gaveta sólida que entra pela esquerda.
+- Tela grande: a barra lateral vai de cima a baixo; o teclado fica centralizado na área da
+  calculadora e sobe para perto do meio quando a janela passa de `BODY_MAX_HEIGHT`.
+  Trigonometria: conteúdo com tamanho máximo (`TRIG_MAX_SIZE`), centralizado.
+- Teclados (`keypad.py`): Comum igual ao iOS 26 (`⌫ AC % ÷` / 789× / 456− / 123+ / `( ) 0 , =`),
+  círculos de até 64 px com 12 px entre eles; Científica com três linhas de funções e uma coluna
+  `( ) ; e π` à esquerda, cápsulas de 80 × 44 px (`aspect` 1,82) com 9 px entre elas.
+  `KeypadMetrics`, `KEY_PAD` (4 px de folga para sombra e "estufar"), bloco centralizado e
+  encostado embaixo; `MainWindow._fit_keypad` dá ao teclado a altura exata e o resto ao visor;
+  `_align_display` alinha o número à borda das teclas.
+- Tecla `( )` (ação `PARENTHESES`) chama `ExpressionEditor.parenthesis()` no core: fecha se há
+  parêntese aberto e a conta termina em número, `)`, `!`, `%`, `π` ou `e`; senão abre.
+- Visor sem caixa nem chips: "DEG" em texto discreto, "Porcentagem" como botão de texto
+  (`Display.add_tool`), número grande e leve (50 pt) com altura fixa.
+- Animações: tecla estufa 7% ao apertar e volta com mola; operador escolhido fica com fundo
+  claro e símbolo laranja até a próxima tecla (`operator_selected_bg`, `Keypad.set_selected`);
+  menu e gaveta com mola. Tudo some com "reduzir movimento".
+- Porcentagem: painel sólido sobre visor e teclado (`MainWindow.percentage_area`), opções
+  "Parte | Variação | Desconto" (nome completo na dica), resultado grande e "Usar resultado".
+- Barra de título do Windows escura no tema escuro (`system.set_dark_title_bar`, DWM).
+- Contorno de foco só quando o foco veio do teclado (Tab).
+
 ## Interface (Etapas 3 e 4)
 
 - Aprovado: pytest-qt (offscreen); histórico em painel lateral recolhível; `preferencias.json`
@@ -156,7 +197,7 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
 
 - PySide6 com `QPainter` e `QPropertyAnimation`; janela redimensionável com tamanho mínimo.
 - "Vidro líquido" simulado com translucidez, gradientes, bordas e brilho (blur real pesa e é instável).
-- Tema claro (azul-gelo, lavanda, coral) e escuro (azul-marinho profundo, nunca preto puro; roxo suave; turquesa). A troca muda TODOS os elementos, com transição suave.
+- Tema claro (cinza-claro) e escuro (grafite), no estilo da calculadora do macOS, com laranja só em operadores e "="; ver "Redesign estilo calculadora do macOS". A troca muda TODOS os elementos, com transição suave.
 - Cores de seno, cosseno e tangente diferentes, mais rótulo escrito e estilo de linha (não depender só da cor).
 - Respeitar a preferência de "reduzir movimento" do sistema.
 - Histórico: 20 itens, JSON em pasta de configuração do sistema (usar `QStandardPaths`), etiqueta DEG/RAD nos itens com trigonometria, clique insere só o número do resultado.

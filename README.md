@@ -49,13 +49,18 @@ etapas pequenas, cada uma com testes automáticos.
 </p>
 
 **Visual**
-- Teclas, visor, abas e painéis de vidro semitransparente com brilho e borda, sobre um fundo
-  com manchas de cor.
-- Tema claro (azul-gelo, lavanda e coral) e escuro (azul-marinho, roxo suave e turquesa), com
-  transição de 450 ms. Um segundo clique no meio da transição a faz voltar do ponto em que
-  estava.
-- Abre seguindo o tema do Windows. Depois de escolhido no botão de lua/sol, vale o tema escolhido.
-- Animações discretas de clique e de troca de aba. Com "reduzir movimento" ligado no Windows,
+- Visual no estilo da calculadora do macOS: fundo grafite (ou cinza-claro), teclas opacas em
+  cápsula, operadores no laranja da Apple e o número grande e fino direto sobre o fundo.
+- Aba Comum com o layout da Apple: `⌫ AC % ÷` em cima e `( ) 0 , =` embaixo. A tecla `( )` abre
+  ou fecha o parêntese conforme a conta. Na Científica, três linhas de funções em cima e uma
+  coluna de funções à esquerda do mesmo teclado.
+- Topo como no macOS: botão de barra lateral (histórico) à esquerda, seletor de modo no centro
+  ("Científica ⌄") e tema à direita. O histórico fica numa barra lateral à esquerda.
+- Animações como as da Apple: a tecla estufa ao apertar e volta com efeito de mola, e o operador
+  escolhido fica destacado até a próxima tecla.
+- Em tela cheia, a barra lateral vai de cima a baixo e a calculadora fica centralizada. No tema
+  escuro, a barra de título do Windows também fica escura.
+- Com "reduzir movimento" ligado no Windows,
   tudo fica instantâneo.
 
 **Histórico e preferências**

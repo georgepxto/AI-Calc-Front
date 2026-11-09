@@ -307,9 +307,9 @@ def test_largura_minima_gaveta_historico_mantem_painel_alinhado_e_usar_resultado
     janela.close_history_drawer()
     qtbot.wait(250)  # aguarda a animação da gaveta
 
-    # Painel continua visível e alinhado exatamente à área do teclado
+    # Painel continua visível e alinhado exatamente à sua área (visor + teclado)
     assert panel.isVisible()
-    assert panel.geometry() == janela.pages.geometry()
+    assert panel.geometry() == janela.percentage_area()
 
     # Botão "Usar resultado" continua acessível dentro do painel
     btn = panel.use_result_button

@@ -36,7 +36,7 @@ Para rodar os testes: `pip install -r requirements.txt` e depois `pytest`.
 
 ### Painel Porcentagem (Etapa 6)
 
-O botão **Porcentagem** fica abaixo do visor na aba **Comum**. O painel aceita
+O botão **Porcentagem** fica no canto de cima do visor na aba **Comum**. O painel aceita
 ponto ou vírgula decimal.
 
 | Operação | Cálculo | Exemplo |
@@ -194,3 +194,36 @@ Funções exigem parênteses (`sin 30` mostra "Use parênteses: sin(30)").
 - Etapa 5A: licença MIT, em nome de Francisco Aurélio.
 - Etapa 5B: executável de um arquivo só (`AI Calc.exe`, sem console), publicado como anexo de uma
   Release no GitHub; o README explica o aviso do Windows para executáveis sem assinatura.
+- Redesign estilo calculadora da Apple (iOS 26): fundo liso (preto no escuro, substituindo a regra
+  "nunca preto puro"; cinza-gelo no claro), teclas em cápsula de vidro, números em cinza e
+  operadores em laranja com símbolo branco. Substitui as cores da Etapa 3C. O ícone não mudou.
+- O laranja é mais fechado que o da Apple para o símbolo branco ter contraste 3:1 (texto grande,
+  WCAG); o restante continua com 4,5:1.
+- Aba Comum com o layout do iOS 26: `⌫ AC % ÷` / `7 8 9 ×` / `4 5 6 −` / `1 2 3 +` / `( ) 0 , =`.
+  A tecla `( )` abre ou fecha o parêntese conforme a conta (no teclado físico, `(` e `)` seguem
+  separados). "C" passou a se chamar "AC".
+- Científica: três linhas de funções em cima e uma coluna `( ) ; e π` à esquerda do teclado Comum.
+- Visor sem caixa; o botão Porcentagem foi da linha abaixo do visor para o canto de cima do visor.
+- Abas como controle segmentado com lente deslizante (260 ms); histórico e tema numa cápsula no
+  topo; histórico como lista com divisórias.
+- Teclas com tamanho limitado (Comum: círculos de até 64 px; Científica: cápsulas de até 48 px de
+  altura), bloco centralizado e encostado embaixo; o número do visor e o topo alinham com as bordas
+  das teclas.
+- Animações no estilo do iOS 26 (substituem "a tecla encolhe 4%" da Etapa 3C): a tecla estufa 7%
+  ao apertar e volta com efeito de mola; o operador escolhido fica destacado (fundo claro, símbolo
+  laranja) até a próxima tecla; lente das abas e gaveta do histórico com mola. Com "reduzir
+  movimento", tudo é instantâneo.
+- Modos num menu ☰ à esquerda do topo (como na Calculadora do Windows), com o nome do modo atual
+  ao lado; substitui o controle segmentado no topo, que mudava de tamanho a cada troca.
+- Tela cheia: calculadora e histórico juntos e centralizados, com tamanho máximo.
+- Tema escuro: reflexos do vidro mais discretos e barra de título do Windows escura.
+- Porcentagem: o painel cobre o visor e o teclado (fundo sólido), as opções passam a se chamar
+  "Parte", "Variação" e "Desconto" (nome completo na dica) e o resultado aparece em destaque.
+- Redesign final aprovado pelo George ("macOS Tahoe refinado"): fundo grafite `#1C1C1E` no escuro
+  (substitui o preto puro) e `#EFEFF4` no claro; teclas opacas; operadores no laranja original
+  da Apple (#FF9500 / #FF9F0A) com símbolo branco, mesmo abaixo de 3:1 (decisão de design).
+- Topo: barra lateral à esquerda, seletor de modo "Científica ⌄" no centro (abre a lista de
+  modos) e tema à direita; substitui o botão ☰.
+- Histórico como barra lateral à esquerda, plana, com lixeira para limpar; o botão de barra
+  lateral esconde/mostra na janela larga e abre a gaveta (pela esquerda) na estreita.
+- Científica com teclas em cápsula de 80 × 44 px; visor sem chips ("DEG" e "Porcentagem" em texto).

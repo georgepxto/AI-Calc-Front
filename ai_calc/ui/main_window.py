@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import string
 
-from PySide6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, Qt
+from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, QRect, Qt
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QStackedWidget, QVBoxLayout, QWidget
 
@@ -17,14 +17,18 @@ from ..core.history import History
 from ..core.preferences import Preferences
 from .confirm_dialog import ConfirmDialog
 from .display import Display
-from .glass import Backdrop
-from .glass_button import GlassButton, HistoryToggleButton, ThemeToggleButton
+from .glass import Backdrop, set_text_color
+from .glass_button import GlassButton, HistoryToggleButton, ModeButton, ThemeToggleButton
 from .history_panel import HistoryPanel
+from .nav_menu import NavMenu
 from .percentage_panel import PercentagePanel
 from .motion import fade_in
 from .keypad import (
+    COMMON_METRICS,
+    SCIENTIFIC_METRICS,
     ANGLE_MODE,
     BACKSPACE,
+    PARENTHESES,
     CLEAR,
     COMMON_KEYS,
     EVALUATE,
@@ -32,7 +36,8 @@ from .keypad import (
     Keypad,
 )
 from .tabs import GlassTabBar
-from .theme import LIGHT, ThemeManager
+from .system import set_dark_title_bar
+from .theme import DARK, LIGHT, ThemeManager
 from .trig_page import TrigPage
 
 MIN_WIDTH = 360
@@ -42,12 +47,21 @@ START_SIZE = (700, 640)
 COMMON_TAB = 0
 SCIENTIFIC_TAB = 1
 TRIG_TAB = 2
+OPERATOR_KEYS = ("+", "−", "×", "÷")
 TAB_NAMES = {COMMON_TAB: "comum", SCIENTIFIC_TAB: "cientifica", TRIG_TAB: "trigonometria"}
+
+OUTER_MARGIN = 16      # margem dos cartões por cima (gaveta, menu)
+CALC_MARGIN = 16       # margem da calculadora dentro da janela
+SECTION_GAP = 12       # espaço entre topo, visor e teclado
 
 # Histórico: painel fixo ao lado quando a janela é larga; gaveta com botão quando é estreita.
 DOCK_MIN_WIDTH = 660
 PANEL_WIDTH = 260
-DRAWER_MS = 220
+# Tela grande: calculadora e histórico ficam juntos e centralizados, com tamanho máximo.
+BODY_MAX_HEIGHT = 780          # abas com teclado
+TRIG_MAX_SIZE = (1500, 1000)   # aba Trigonometria (círculo e gráficos aproveitam o espaço)
+
+DRAWER_MS = 340        # gaveta do histórico entra com uma mola leve
 
 # Caracteres aceitos do teclado físico (letras servem para digitar funções: sin, ln...).
 TYPED_CHARACTERS = (
@@ -73,15 +87,25 @@ class MainWindow(QMainWindow):
         self.history = history or History()
         self.preferences = preferences or Preferences()
         self._docked = False
+        self._sidebar_hidden = False
         self._drawer_open = False
         self._percentage_open = False
 
         # --- topo ---
+        # Os modos ficam num menu (☰), como na Calculadora do Windows; o nome do modo
+        # atual aparece ao lado. Assim o topo não muda de tamanho ao trocar de modo.
         self.tabs = GlassTabBar(self.theme, self)
         self.tabs.setAccessibleName("Modo da calculadora")
         self.tabs.addTab("Comum")
         self.tabs.addTab("Científica")
         self.tabs.addTab("Trigonometria")
+
+        # Seletor de modo no centro do topo ("Científica ⌄"), que abre a lista de modos.
+        self.mode_title = ModeButton(self.tabs.tabText(0), self.theme, self)
+        self.mode_title.setAccessibleName("Escolher modo da calculadora")
+        self.mode_title.setToolTip("Escolher modo")
+        self.mode_title.clicked.connect(self.toggle_menu)
+        self.menu_button = self.mode_title
 
         self.history_button = HistoryToggleButton(self.theme, self)
         self.history_button.clicked.connect(self.toggle_history_drawer)
@@ -94,11 +118,12 @@ class MainWindow(QMainWindow):
 
         # --- calculadora ---
         self.display = Display(self.theme, self)
-        self.common_keypad = Keypad(COMMON_KEYS, self.theme, self)
-        self.scientific_keypad = Keypad(SCIENTIFIC_KEYS, self.theme, self, key_min_height=34)
+        self.common_keypad = Keypad(COMMON_KEYS, self.theme, self, COMMON_METRICS)
+        self.scientific_keypad = Keypad(SCIENTIFIC_KEYS, self.theme, self, SCIENTIFIC_METRICS)
         for keypad in (self.common_keypad, self.scientific_keypad):
             keypad.inserted.connect(self.insert)
             keypad.action.connect(self.run_action)
+            keypad.laid_out.connect(self._align_display)
 
         self.trig_page = TrigPage(self.theme, self)
         self.trig_page.mode_toggle_requested.connect(lambda: self.run_action(ANGLE_MODE))
@@ -115,41 +140,48 @@ class MainWindow(QMainWindow):
         central = Backdrop(self.theme, self)
         central.setObjectName("central")
         self.setCentralWidget(central)
+        central.installEventFilter(self)             # centraliza o corpo ao mudar de tamanho
+        self.body = QWidget(central)
+        self.body.setObjectName("body")
 
-        self.calculator = QWidget(central)
+        self.calculator = QWidget(self.body)
+        self.calculator.installEventFilter(self)     # refaz as medidas do teclado ao mudar de tamanho
         column = QVBoxLayout(self.calculator)
-        column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(10)
+        column.setContentsMargins(CALC_MARGIN, 8, CALC_MARGIN, CALC_MARGIN + 6)
+        column.setSpacing(SECTION_GAP)
+        # Topo: barra lateral à esquerda, modo no centro e tema à direita (como no macOS).
         top = QHBoxLayout()
-        top.setSpacing(6)
-        top.addWidget(self.tabs, 1)
-        top.addWidget(self.history_button)
-        top.addWidget(self.theme_button)
+        top.setSpacing(0)
+        top.setContentsMargins(0, 0, 0, 0)
+        self._top_row = top
+        top.addWidget(self.history_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        top.addStretch(1)
+        top.addWidget(self.mode_title, 0, Qt.AlignmentFlag.AlignVCenter)
+        top.addStretch(1)
+        top.addWidget(self.theme_button, 0, Qt.AlignmentFlag.AlignVCenter)
+        self.menu_group = self.mode_title
+        self.tools = self.theme_button
         column.addLayout(top)
-        column.addWidget(self.display)
+        column.addWidget(self.display, 1)
 
-        self.percentage_button = GlassButton("Porcentagem", self.theme, role="function", small=True, parent=self)
-        self.percentage_button.setFixedHeight(30)
+        self.percentage_button = GlassButton("Porcentagem", self.theme, role="function", small=True,
+                                             parent=self, flat=True)
+        self.percentage_button.setFixedSize(104, 26)
         self.percentage_button.setAccessibleName("Porcentagem")
         self.percentage_button.setToolTip("Abrir painel de porcentagem")
         self.percentage_button.clicked.connect(self.toggle_percentage_panel)
+        # Fica no canto de cima do visor (só na aba Comum), sem ocupar uma linha própria.
+        self.display.add_tool(self.percentage_button)
 
-        self.common_tools = QWidget(self.calculator)
-        common_tools_layout = QHBoxLayout(self.common_tools)
-        common_tools_layout.setContentsMargins(0, 0, 0, 0)
-        common_tools_layout.setSpacing(6)
-        common_tools_layout.addWidget(self.percentage_button)
-        common_tools_layout.addStretch(1)
-        column.addWidget(self.common_tools)
-
-        column.addWidget(self.pages, 1)
+        column.addWidget(self.pages, 0)
+        self._column = column
 
         self.percentage_panel = PercentagePanel(self.theme, self.calculator)
         self.percentage_panel.value_chosen.connect(self.insert_percentage_value)
         self.percentage_panel.close_requested.connect(self.close_percentage_panel)
         self.percentage_panel.hide()
 
-        self.history_panel = HistoryPanel(self.theme, central)
+        self.history_panel = HistoryPanel(self.theme, self.body)
         self.history_panel.setFixedWidth(PANEL_WIDTH)
         self.history_panel.value_chosen.connect(self.insert_history_value)
         self.history_panel.clear_requested.connect(self.ask_clear_history)
@@ -157,15 +189,25 @@ class MainWindow(QMainWindow):
         self.history_panel.show_entries(self.history.entries)
         self._drawer_animation = QPropertyAnimation(self.history_panel, b"pos", self)
         self._drawer_animation.setDuration(DRAWER_MS)
-        self._drawer_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        drawer_spring = QEasingCurve(QEasingCurve.Type.OutBack)
+        drawer_spring.setOvershoot(0.6)
+        self._drawer_animation.setEasingCurve(drawer_spring)
         self._drawer_animation.finished.connect(self._drawer_animation_finished)
 
-        self._root = QHBoxLayout(central)
-        self._root.setContentsMargins(12, 10, 12, 12)
-        self._root.setSpacing(12)
+        self._root = QHBoxLayout(self.body)
+        # Histórico encostado à esquerda (barra lateral) e calculadora ao lado, sem margens.
+        self._root.setContentsMargins(0, 0, 0, 0)
+        self._root.setSpacing(0)
         self._root.addWidget(self.calculator, 1)
 
         self.confirm_dialog: ConfirmDialog | None = None
+
+        self.nav_menu = NavMenu(self.theme, self.tabs, central)
+        self.tabs.tabBarClicked.connect(lambda _: self.close_menu())
+        self.nav_menu.closed.connect(lambda: self.menu_button.setFocus(Qt.FocusReason.TabFocusReason)
+                                     if self.menu_button.hasFocus() else None)
+        self.theme.changed.connect(self._apply_title_color)
+        self._apply_title_color()
 
         # --- preferências salvas ---
         self.set_angle_mode(self.preferences.angle_mode, save=False)
@@ -175,7 +217,7 @@ class MainWindow(QMainWindow):
 
         self.theme.apply()
         self._update_history_layout()
-        self.common_tools.setVisible(self.tabs.currentIndex() == COMMON_TAB)
+        self.percentage_button.setVisible(self.tabs.currentIndex() == COMMON_TAB)
         self._refresh()
 
     @property
@@ -211,6 +253,8 @@ class MainWindow(QMainWindow):
                 fade_in(self.display.result_label, self.theme)
         elif action == ANGLE_MODE:
             self.set_angle_mode("RAD" if self.angle_mode == "DEG" else "DEG")
+        elif action == PARENTHESES:
+            self.editor.parenthesis()
         self._refresh()
 
     def set_angle_mode(self, mode: str, save: bool = True) -> None:
@@ -225,17 +269,50 @@ class MainWindow(QMainWindow):
     def _refresh(self) -> None:
         editor = self.editor
         self.display.show_state(editor.expression, editor.result, editor.message, editor.is_error)
+        # Como na Apple: o operador recém-escolhido fica destacado até a próxima tecla.
+        last = editor.expression[-1:] if not editor.result else ""
+        for keypad in (self.common_keypad, self.scientific_keypad):
+            keypad.set_selected(last if last in OPERATOR_KEYS else None)
+
+    # --- menu de modos ----------------------------------------------------------
+    @property
+    def menu_open(self) -> bool:
+        return self.nav_menu.is_open
+
+    def toggle_menu(self) -> None:
+        if self.nav_menu.is_open:
+            self.close_menu()
+        else:
+            self.open_menu()
+
+    def open_menu(self) -> None:
+        group = self.menu_group
+        anchor = group.mapTo(self.centralWidget(), QPoint(group.width() // 2, group.height() + 6))
+        self.nav_menu.open_at(anchor)
+        # Contorno de foco na lista só para quem chegou pelo teclado.
+        reason = (Qt.FocusReason.TabFocusReason if self.menu_button.keyboard_focus
+                  else Qt.FocusReason.PopupFocusReason)
+        self.tabs.setFocus(reason)
+
+    def close_menu(self) -> None:
+        self.nav_menu.close_menu()
+
+    def _apply_title_color(self) -> None:
+        set_text_color(self.mode_title, self.theme.color("text"))
 
     def _tab_changed(self, index: int) -> None:
+        self.mode_title.setText(self.tabs.tabText(index))
         self.pages.setCurrentIndex(index)
         fade_in(self.pages.currentWidget(), self.theme)
         # A aba Trigonometria não usa o visor e dá o espaço do histórico ao círculo
         # (o histórico continua na gaveta, pelo botão de relógio).
         self.display.setVisible(index != TRIG_TAB)
-        self.common_tools.setVisible(index == COMMON_TAB)
+        self.percentage_button.setVisible(index == COMMON_TAB)
+        self._fit_keypad()
         if index != COMMON_TAB and self._percentage_open:
             self.close_percentage_panel()
         self._update_history_layout()
+        self._place_body()
         if index in TAB_NAMES:
             self.preferences.update(last_tab=TAB_NAMES[index])
 
@@ -245,7 +322,12 @@ class MainWindow(QMainWindow):
         self.theme.toggle()
         self.preferences.update(theme=self.theme.name)
 
+    def showEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
+        super().showEvent(event)
+        set_dark_title_bar(self, self.theme.name == DARK)
+
     def _update_theme_button(self, name: str) -> None:
+        set_dark_title_bar(self, name == DARK)
         # O ícone mostra para qual tema o botão leva: lua no claro, sol no escuro.
         label = "Mudar para o tema escuro" if name == LIGHT else "Mudar para o tema claro"
         self.theme_button.setAccessibleName(label)
@@ -283,6 +365,12 @@ class MainWindow(QMainWindow):
         self.history_panel.show_entries([])
 
     def toggle_history_drawer(self) -> None:
+        if self.history_wide:
+            # Janela larga: o botão esconde/mostra a barra lateral (como no macOS).
+            self._sidebar_hidden = not self._sidebar_hidden
+            self._update_history_layout()
+            self._place_body()
+            return
         if self._drawer_open:
             self.close_history_drawer()
         else:
@@ -299,17 +387,20 @@ class MainWindow(QMainWindow):
         panel.setFixedHeight(target.height())
         panel.raise_()
         panel.show()
-        self._slide(panel, QPoint(self.centralWidget().width(), target.y()), target.topLeft())
+        self._slide(panel, QPoint(-target.width(), target.y()), target.topLeft())
         self._update_history_button()
         first = panel.items[0] if panel.items else panel.close_button
-        first.setFocus(Qt.FocusReason.TabFocusReason)
+        # Contorno de foco só para quem abriu pelo teclado.
+        reason = (Qt.FocusReason.TabFocusReason if self.history_button.keyboard_focus
+                  else Qt.FocusReason.PopupFocusReason)
+        first.setFocus(reason)
 
     def close_history_drawer(self) -> None:
         if not self._drawer_open:
             return
         self._drawer_open = False
         panel = self.history_panel
-        self._slide(panel, panel.pos(), QPoint(self.centralWidget().width(), panel.y()))
+        self._slide(panel, panel.pos(), QPoint(-panel.width(), panel.y()))
         self._update_history_button()
         if self._percentage_open:
             self._update_percentage_layout()
@@ -335,16 +426,20 @@ class MainWindow(QMainWindow):
             self.percentage_panel.raise_()
 
     def _drawer_geometry(self):
-        central = self.centralWidget()
-        top = self.tabs.mapTo(central, QPoint(0, self.tabs.height())).y() + 8
-        width = min(PANEL_WIDTH + 20, central.width() - 48)
-        rect = central.rect().adjusted(central.width() - width - 12, top, -12, -12)
-        return rect
+        body = self.body
+        top = self.history_button.mapTo(body, QPoint(0, self.history_button.height())).y() + 8
+        width = min(PANEL_WIDTH + 20, body.width() - 48)
+        return QRect(OUTER_MARGIN, top, width, body.height() - top - OUTER_MARGIN)
+
+    @property
+    def history_wide(self) -> bool:
+        """Janela larga o bastante para o histórico ficar como barra lateral."""
+        return self.width() >= DOCK_MIN_WIDTH and self.tabs.currentIndex() != TRIG_TAB
 
     def _update_history_layout(self) -> None:
         if not hasattr(self, "_root"):
             return                       # ainda montando a janela
-        docked = self.width() >= DOCK_MIN_WIDTH and self.tabs.currentIndex() != TRIG_TAB
+        docked = self.history_wide and not self._sidebar_hidden
         panel = self.history_panel
         if docked and not self._docked:
             self._drawer_animation.stop()
@@ -353,13 +448,12 @@ class MainWindow(QMainWindow):
             panel.setFixedWidth(PANEL_WIDTH)
             panel.setMinimumHeight(0)
             panel.setMaximumHeight(16777215)
-            self._root.addWidget(panel)
+            self._root.insertWidget(0, panel)
             panel.show()
         elif not docked and (self._docked or not panel.isHidden() and not self._drawer_open):
             self._root.removeWidget(panel)
             panel.hide()
         self._docked = docked
-        self.history_button.setVisible(not docked)
         if self._drawer_open:
             target = self._drawer_geometry()
             panel.setFixedSize(target.size())
@@ -367,7 +461,8 @@ class MainWindow(QMainWindow):
         self._update_history_button()
 
     def _update_history_button(self) -> None:
-        label = "Esconder histórico" if self._drawer_open else "Mostrar histórico"
+        showing = self._drawer_open or self._docked
+        label = "Esconder histórico" if showing else "Mostrar histórico"
         self.history_button.setAccessibleName(label)
         self.history_button.setToolTip(label)
 
@@ -406,7 +501,17 @@ class MainWindow(QMainWindow):
     def _update_percentage_layout(self) -> None:
         if not self._percentage_open:
             return
-        self.percentage_panel.setGeometry(self.pages.geometry())
+        self.percentage_panel.setGeometry(self.percentage_area())
+
+    def percentage_area(self):
+        """Onde o painel de porcentagem aparece: do visor até o fim do teclado, alinhado às
+        bordas das teclas (espaço para os campos e o resultado não ficarem apertados)."""
+        pages = self.pages.geometry()
+        top = self.display.geometry().top()
+        grid = self.common_keypad.grid_rect
+        left = pages.left() + max(0, int(grid.left()) - 4)
+        right = pages.left() + min(pages.width(), int(grid.right()) + 4)
+        return QRect(left, top, right - left, pages.bottom() - top + 1)
 
     def _update_percentage_button(self) -> None:
         label = "Fechar painel de porcentagem" if self._percentage_open else "Abrir painel de porcentagem"
@@ -415,7 +520,75 @@ class MainWindow(QMainWindow):
     def resizeEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
         super().resizeEvent(event)
         self._update_history_layout()
+        self._fit_keypad()
         self._update_percentage_layout()
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802 (nome do Qt)
+        if event.type() == QEvent.Type.Resize:
+            if watched is getattr(self, "calculator", None):
+                self._fit_keypad()
+            elif watched is self.centralWidget():
+                self._place_body()
+        return super().eventFilter(watched, event)
+
+    def _place_body(self) -> None:
+        """O corpo ocupa a janela toda: barra lateral encostada à esquerda, como no macOS.
+        Em telas grandes, quem se centraliza é o conteúdo da calculadora (ver _fit_keypad);
+        na Trigonometria, o conteúdo tem tamanho máximo e fica no meio."""
+        if not hasattr(self, "body"):
+            return
+        central = self.centralWidget()
+        if self.tabs.currentIndex() == TRIG_TAB:
+            width = min(central.width(), TRIG_MAX_SIZE[0])
+            height = min(central.height(), TRIG_MAX_SIZE[1])
+            self.body.setGeometry((central.width() - width) // 2, (central.height() - height) // 2,
+                                  width, height)
+        else:
+            self.body.setGeometry(central.rect())
+        menu = getattr(self, "nav_menu", None)
+        if menu is not None and menu.is_open:
+            menu.setGeometry(central.rect())
+
+    # --- medidas (teclado embaixo, visor ocupa o resto) -------------------------
+    def _fit_keypad(self) -> None:
+        """Teclado com a altura exata das teclas; o espaço que sobra fica com o visor,
+        que encosta o número no teclado (como na Apple). Na Trigonometria, a aba ocupa tudo."""
+        if not hasattr(self, "_column"):
+            return
+        if self.tabs.currentIndex() == TRIG_TAB:
+            self.pages.setMinimumHeight(0)
+            self.pages.setMaximumHeight(16777215)
+            self._column.setStretchFactor(self.pages, 1)
+            return
+        self._column.setStretchFactor(self.pages, 0)
+        keypad = self.current_keypad
+        # Tela grande: visor e teclado sobem para perto do meio, em vez de grudar no rodapé.
+        extra = max(0, self.calculator.height() - BODY_MAX_HEIGHT)
+        bottom = CALC_MARGIN + 6 + extra // 2
+        margins = self._column.contentsMargins()
+        if margins.bottom() != bottom:
+            self._column.setContentsMargins(margins.left(), margins.top(), margins.right(), bottom)
+            margins = self._column.contentsMargins()
+        width = self.calculator.width() - margins.left() - margins.right()
+        room = (
+            self.calculator.height() - margins.top() - margins.bottom()
+            - self.history_button.sizeHint().height()
+            - 2 * SECTION_GAP - self.display.minimumSizeHint().height() - 2
+        )
+        height = max(keypad.minimumSizeHint().height(), keypad.grid_height(width, room))
+        if self.pages.height() != height or self.pages.maximumHeight() != height:
+            self.pages.setFixedHeight(height)
+
+    def _align_display(self) -> None:
+        """Alinha a borda direita do número com a borda direita das teclas."""
+        keypad = self.current_keypad
+        if not isinstance(keypad, Keypad):
+            return
+        grid = keypad.grid_rect
+        left = int(grid.left())
+        right = int(keypad.width() - grid.right())
+        self.display.set_side_margins(left, right)
+        # O topo fica na largura da janela (barra lateral à esquerda, tema à direita).
 
     # --- teclado físico ------------------------------------------------------
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802 (nome do Qt)
@@ -425,6 +598,10 @@ class MainWindow(QMainWindow):
             super().keyPressEvent(event)
             return
 
+        if key == Qt.Key.Key_Escape and self.nav_menu.is_open:
+            self.close_menu()
+            event.accept()
+            return
         if key == Qt.Key.Key_Escape and self._percentage_open:
             self.close_percentage_panel()
             event.accept()

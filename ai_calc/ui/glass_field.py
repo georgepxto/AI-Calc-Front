@@ -9,8 +9,8 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QWidget
 from .glass import paint_focus_ring, paint_glass, set_text_color
 from .theme import KEY_ALPHA, ThemeManager
 
-FIELD_RADIUS = 10
-FIELD_HEIGHT = 40
+FIELD_RADIUS = 999     # campo em cápsula (o raio é limitado à metade da altura)
+FIELD_HEIGHT = 44
 TEXT_POINT_SIZE = 11
 TEXT_MIN_POINT_SIZE = 8     # texto longo diminui até aqui antes de rolar dentro do campo
 
@@ -42,7 +42,7 @@ class GlassField(QWidget):
         self.edit.textChanged.connect(lambda _: self._fit_text())
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 2, 12, 4)
+        layout.setContentsMargins(16, 2, 16, 4)
         layout.setSpacing(8)
         layout.addWidget(self.caption)
         layout.addWidget(self.edit, 1)

@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QEvent, QObject, QRectF, QSize, Qt, Signal
-from PySide6.QtGui import QFont, QKeyEvent, QPainter
+from PySide6.QtGui import QFont, QKeyEvent, QPainter, QPainterPath
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -34,9 +34,11 @@ from .glass import paint_glass, set_text_color
 from .glass_button import GlassButton
 from .glass_field import GlassField
 from .tabs import GlassTabBar
-from .theme import DISPLAY_ALPHA, ThemeManager
+from .theme import DIALOG_ALPHA, ThemeManager
 
 PANEL_RADIUS = 16
+PANEL_PADDING = 16
+RESULT_HEIGHT = 92          # área do resultado: altura fixa, o painel não "pula" ao calcular
 
 
 def _parse_number(text: str) -> float:
@@ -74,25 +76,33 @@ class PercentagePanel(QFrame):
 
         self.title = QLabel("Porcentagem", self)
         font = QFont(self.title.font())
-        font.setPointSize(12)
-        font.setBold(True)
+        font.setPointSize(14)
+        font.setWeight(QFont.Weight.DemiBold)
         self.title.setFont(font)
         top_layout.addWidget(self.title)
         top_layout.addStretch(1)
 
-        self.close_button = GlassButton("✕", theme, role="theme", small=True, parent=self)
+        self.close_button = GlassButton("✕", theme, role="action", small=True, parent=self)
         self.close_button.setAccessibleName("Fechar porcentagem")
         self.close_button.setToolTip("Fechar painel de porcentagem")
-        self.close_button.setFixedSize(QSize(36, 30))
+        self.close_button.setFixedSize(QSize(34, 34))
         self.close_button.clicked.connect(self.close_requested)
         top_layout.addWidget(self.close_button)
 
         # --- Abas de operações ---
         self.op_tabs = GlassTabBar(theme, self)
         self.op_tabs.setAccessibleName("Operação de porcentagem")
-        self.op_tabs.addTab("Parte do total")
-        self.op_tabs.addTab("Variação (%)")
-        self.op_tabs.addTab("Valor original")
+        tabs_font = QFont(self.op_tabs.font())
+        tabs_font.setPointSize(10)
+        self.op_tabs.setFont(tabs_font)
+        # Rótulos curtos para caber na largura do teclado; o nome completo vai na dica.
+        for index, (label, full) in enumerate((
+            ("Parte", "Parte do total"),
+            ("Variação", "Variação percentual"),
+            ("Desconto", "Valor original antes de um desconto"),
+        )):
+            self.op_tabs.addTab(label)
+            self.op_tabs.setTabToolTip(index, full)
         self.op_tabs.currentChanged.connect(self._operation_changed)
 
         # --- Páginas de campos específicos ---
@@ -102,7 +112,7 @@ class PercentagePanel(QFrame):
         p0 = QWidget(self.fields_stack)
         l0 = QVBoxLayout(p0)
         l0.setContentsMargins(0, 0, 0, 0)
-        l0.setSpacing(6)
+        l0.setSpacing(8)
         self.part_field = GlassField("Parte", theme, p0)
         self.total_field = GlassField("Total", theme, p0)
         l0.addWidget(self.part_field)
@@ -113,7 +123,7 @@ class PercentagePanel(QFrame):
         p1 = QWidget(self.fields_stack)
         l1 = QVBoxLayout(p1)
         l1.setContentsMargins(0, 0, 0, 0)
-        l1.setSpacing(6)
+        l1.setSpacing(8)
         self.initial_field = GlassField("Valor inicial", theme, p1)
         self.final_field = GlassField("Valor final", theme, p1)
         l1.addWidget(self.initial_field)
@@ -124,7 +134,7 @@ class PercentagePanel(QFrame):
         p2 = QWidget(self.fields_stack)
         l2 = QVBoxLayout(p2)
         l2.setContentsMargins(0, 0, 0, 0)
-        l2.setSpacing(6)
+        l2.setSpacing(8)
         self.discount_final_field = GlassField("Valor final", theme, p2)
         self.discount_rate_field = GlassField("Desconto (%)", theme, p2)
         l2.addWidget(self.discount_final_field)
@@ -148,15 +158,15 @@ class PercentagePanel(QFrame):
         self.formula_label.setAccessibleName("Fórmula da porcentagem")
         self.formula_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         formula_font = QFont(self.formula_label.font())
-        formula_font.setPointSize(9)
+        formula_font.setPointSize(10)
         self.formula_label.setFont(formula_font)
 
         self.result_label = QLabel(self)
         self.result_label.setAccessibleName("Resultado da porcentagem")
         self.result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         res_font = QFont(self.result_label.font())
-        res_font.setPointSize(18)
-        res_font.setBold(True)
+        res_font.setPointSize(30)
+        res_font.setWeight(QFont.Weight.Light)
         self.result_label.setFont(res_font)
 
         self.message_label = QLabel(self)
@@ -165,27 +175,42 @@ class PercentagePanel(QFrame):
         self.message_label.setWordWrap(True)
         msg_font = QFont(self.message_label.font())
         msg_font.setPointSize(10)
-        msg_font.setBold(True)
+        msg_font.setWeight(QFont.Weight.DemiBold)
         self.message_label.setFont(msg_font)
+
+        # Fórmula, resultado e erro numa área de altura fixa (o painel não muda de tamanho).
+        self.result_area = QWidget(self)
+        area = QVBoxLayout(self.result_area)
+        area.setContentsMargins(0, 0, 0, 0)
+        area.setSpacing(2)
+        area.addStretch(1)
+        area.addWidget(self.formula_label)
+        area.addWidget(self.result_label)
+        area.addWidget(self.message_label)
+        area.addStretch(1)
+        self.result_area.setFixedHeight(RESULT_HEIGHT)
 
         # --- Botão Usar resultado ---
         self.use_result_button = GlassButton("Usar resultado", theme, role="equals", parent=self)
         self.use_result_button.setAccessibleName("Usar resultado na conta")
         self.use_result_button.setToolTip("Inserir o resultado na expressão da calculadora")
-        self.use_result_button.setFixedHeight(38)
+        self.use_result_button.setFixedHeight(44)
+        use_font = QFont(self.use_result_button.font())
+        use_font.setPointSize(12)
+        use_font.setWeight(QFont.Weight.DemiBold)
+        self.use_result_button.setFont(use_font)
         self.use_result_button.setEnabled(False)
         self.use_result_button.clicked.connect(self.use_result)
 
         # --- Montagem do layout principal ---
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 10, 12, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(PANEL_PADDING, PANEL_PADDING - 2, PANEL_PADDING, PANEL_PADDING)
+        layout.setSpacing(12)
         layout.addLayout(top_layout)
         layout.addWidget(self.op_tabs)
         layout.addWidget(self.fields_stack)
-        layout.addWidget(self.formula_label)
-        layout.addWidget(self.result_label)
-        layout.addWidget(self.message_label)
+        layout.addStretch(1)
+        layout.addWidget(self.result_area)
         layout.addStretch(1)
         layout.addWidget(self.use_result_button)
 
@@ -318,9 +343,13 @@ class PercentagePanel(QFrame):
     def paintEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = QRectF(self.rect()).adjusted(1, 1, -1, -3)
+        rect = QRectF(self.rect()).adjusted(1, 1, -1, -4)
         theme = self._theme
-        paint_glass(painter, rect, PANEL_RADIUS, theme, theme.hex("display_bg"), DISPLAY_ALPHA)
+        # Base sólida: o painel fica por cima do teclado e nada pode aparecer por trás.
+        base = QPainterPath()
+        base.addRoundedRect(rect, PANEL_RADIUS, PANEL_RADIUS)
+        painter.fillPath(base, theme.color("window_bottom"))
+        paint_glass(painter, rect, PANEL_RADIUS, theme, theme.hex("display_bg"), DIALOG_ALPHA)
 
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:  # noqa: N802 (nome do Qt)
         if event.type() == QEvent.Type.KeyPress:
