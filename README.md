@@ -49,9 +49,15 @@ etapas pequenas, cada uma com testes automáticos.
 </p>
 
 **Visual**
-- Teclas, visor, abas e painéis de vidro semitransparente com brilho e borda, sobre um fundo
-  com manchas de cor.
-- Tema claro (azul-gelo, lavanda e coral) e escuro (azul-marinho, roxo suave e turquesa), com
+- Visual de "vidro líquido" inspirado no da Apple: teclas em cápsula, visor e painéis de vidro
+  translúcido com reflexo na borda de cima, um reflexo fino embaixo e sombra difusa, sobre um
+  fundo neutro com dois brilhos suaves.
+- Abas num controle segmentado, com a aba escolhida numa "lente" que desliza até ela; os botões
+  de histórico e de tema ficam juntos numa cápsula ao lado.
+- Teclado organizado em grupos: funções em vidro mais transparente, controles (`C`, `⌫`,
+  parênteses, `%`...) em cinza, números em vidro claro e os operadores em laranja, sempre na
+  última coluna, terminando no "=".
+- Tema claro (branco-gelo) e escuro (grafite, nunca preto puro), com um único acento laranja e
   transição de 450 ms. Um segundo clique no meio da transição a faz voltar do ponto em que
   estava.
 - Abre seguindo o tema do Windows. Depois de escolhido no botão de lua/sol, vale o tema escolhido.

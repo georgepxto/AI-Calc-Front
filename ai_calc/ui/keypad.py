@@ -21,7 +21,7 @@ ANGLE_MODE = "angle_mode"
 class Key:
     label: str
     accessible_name: str
-    role: str                  # "digit", "operator", "function", "action" ou "equals" (estilo)
+    role: str                  # "digit", "operator", "function", "action" ou "equals" (cor)
     insert: str | None = None  # texto inserido; None quando é uma ação
     action: str | None = None
     column_span: int = 1
@@ -40,75 +40,88 @@ def _function(label: str, name: str, insert: str) -> Key:
     return Key(label, name, "function", insert=insert, small=True)
 
 
+def _action(label: str, name: str, insert: str) -> Key:
+    """Tecla de controle (parênteses, constantes, %, ;): vidro cinza, insere o próprio texto."""
+    return Key(label, name, "action", insert=insert)
+
+
+CLEAR_KEY = Key("C", "Limpar tudo", "action", action=CLEAR)
+BACKSPACE_KEY = Key("⌫", "Apagar último caractere", "action", action=BACKSPACE)
+
+# Organização (igual nas duas abas): controles em cinza na linha de cima, números em
+# vidro claro e os operadores em laranja sempre na última coluna, terminando no "=".
+
 # Teclado Comum: 4 colunas, de cima para baixo.
 COMMON_KEYS: tuple[tuple[Key, ...], ...] = (
     (
-        Key("C", "Limpar tudo", "action", action=CLEAR),
-        _operator("(", "Abre parêntese"),
-        _operator(")", "Fecha parêntese"),
-        Key("⌫", "Apagar último caractere", "action", action=BACKSPACE),
+        CLEAR_KEY,
+        BACKSPACE_KEY,
+        _action("(", "Abre parêntese", "("),
+        _action(")", "Fecha parêntese", ")"),
     ),
     (_digit("7", "Sete"), _digit("8", "Oito"), _digit("9", "Nove"), _operator("÷", "Dividir")),
     (_digit("4", "Quatro"), _digit("5", "Cinco"), _digit("6", "Seis"), _operator("×", "Multiplicar")),
     (_digit("1", "Um"), _digit("2", "Dois"), _digit("3", "Três"), _operator("−", "Subtrair")),
     (
-        _operator("%", "Porcentagem"),
         _digit("0", "Zero"),
         Key(",", "Vírgula decimal", "digit", insert=","),
+        _action("%", "Porcentagem", "%"),
         _operator("+", "Somar"),
     ),
     (Key("=", "Calcular resultado", "equals", action=EVALUATE, column_span=4),),
 )
 
-# Teclado Científico: 5 colunas. A tecla DEG/RAD troca de rótulo conforme o modo.
+# Teclado Científico: 5 colunas. Em cima, três linhas de funções (cada inversa logo
+# abaixo da sua função); embaixo, o mesmo bloco da aba Comum, com uma coluna a mais
+# para π, e, % e ;. A tecla DEG/RAD troca de rótulo conforme o modo.
 SCIENTIFIC_KEYS: tuple[tuple[Key, ...], ...] = (
     (
-        Key("DEG", "Modo de ângulo: graus", "action", action=ANGLE_MODE, small=True),
+        Key("DEG", "Modo de ângulo: graus", "function", action=ANGLE_MODE, small=True),
         _function("sin", "Seno", "sin("),
         _function("cos", "Cosseno", "cos("),
         _function("tan", "Tangente", "tan("),
-        Key("C", "Limpar tudo", "action", action=CLEAR),
+        _function("ln", "Logaritmo natural", "ln("),
     ),
     (
+        _function("ⁿ√", "Raiz de índice n: raiz(n; x)", "raiz("),
         _function("sin⁻¹", "Arco seno", "asin("),
         _function("cos⁻¹", "Arco cosseno", "acos("),
         _function("tan⁻¹", "Arco tangente", "atan("),
-        _function("ln", "Logaritmo natural", "ln("),
         _function("log", "Logaritmo na base 10", "log("),
     ),
     (
         _function("√", "Raiz quadrada", "√"),
-        _function("ⁿ√", "Raiz de índice n: raiz(n; x)", "raiz("),
         _function("x²", "Ao quadrado", "^2"),
         _function("xʸ", "Potência", "^"),
         _function("n!", "Fatorial", "!"),
+        _function("|x|", "Valor absoluto", "abs("),
     ),
     (
-        _function("π", "Pi", "π"),
-        _function("e", "Número de Euler", "e"),
-        _function("|x|", "Valor absoluto", "abs("),
-        _operator("(", "Abre parêntese"),
-        _operator(")", "Fecha parêntese"),
+        CLEAR_KEY,
+        BACKSPACE_KEY,
+        _action("(", "Abre parêntese", "("),
+        _action(")", "Fecha parêntese", ")"),
+        _operator("÷", "Dividir"),
     ),
     (
         _digit("7", "Sete"), _digit("8", "Oito"), _digit("9", "Nove"),
-        _operator("÷", "Dividir"),
-        Key("⌫", "Apagar último caractere", "action", action=BACKSPACE),
+        _action("π", "Pi", "π"),
+        _operator("×", "Multiplicar"),
     ),
     (
         _digit("4", "Quatro"), _digit("5", "Cinco"), _digit("6", "Seis"),
-        _operator("×", "Multiplicar"),
-        _operator("%", "Porcentagem"),
+        _action("e", "Número de Euler", "e"),
+        _operator("−", "Subtrair"),
     ),
     (
         _digit("1", "Um"), _digit("2", "Dois"), _digit("3", "Três"),
-        _operator("−", "Subtrair"),
-        _operator(";", "Separador de argumentos (ponto e vírgula)"),
+        _action("%", "Porcentagem", "%"),
+        _operator("+", "Somar"),
     ),
     (
         _digit("0", "Zero"),
         Key(",", "Vírgula decimal", "digit", insert=","),
-        _operator("+", "Somar"),
+        _action(";", "Separador de argumentos (ponto e vírgula)", ";"),
         Key("=", "Calcular resultado", "equals", action=EVALUATE, column_span=2),
     ),
 )
@@ -133,7 +146,7 @@ class Keypad(QWidget):
         self._key_min_height = key_min_height
         grid = QGridLayout(self)
         grid.setContentsMargins(0, 0, 0, 0)
-        grid.setSpacing(6)
+        grid.setSpacing(8)
         for row_index, row in enumerate(rows):
             column = 0
             for key in row:

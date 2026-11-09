@@ -36,7 +36,7 @@ from .glass_field import GlassField
 from .tabs import GlassTabBar
 from .theme import DISPLAY_ALPHA, ThemeManager
 
-PANEL_RADIUS = 16
+PANEL_RADIUS = 24
 
 
 def _parse_number(text: str) -> float:

@@ -18,7 +18,7 @@ from ..core.preferences import Preferences
 from .confirm_dialog import ConfirmDialog
 from .display import Display
 from .glass import Backdrop
-from .glass_button import GlassButton, HistoryToggleButton, ThemeToggleButton
+from .glass_button import GlassButton, HistoryToggleButton, ThemeToggleButton, ToolGroup
 from .history_panel import HistoryPanel
 from .percentage_panel import PercentagePanel
 from .motion import fade_in
@@ -46,7 +46,7 @@ TAB_NAMES = {COMMON_TAB: "comum", SCIENTIFIC_TAB: "cientifica", TRIG_TAB: "trigo
 
 # Histórico: painel fixo ao lado quando a janela é larga; gaveta com botão quando é estreita.
 DOCK_MIN_WIDTH = 660
-PANEL_WIDTH = 260
+PANEL_WIDTH = 280
 DRAWER_MS = 220
 
 # Caracteres aceitos do teclado físico (letras servem para digitar funções: sin, ln...).
@@ -119,17 +119,20 @@ class MainWindow(QMainWindow):
         self.calculator = QWidget(central)
         column = QVBoxLayout(self.calculator)
         column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(10)
+        column.setSpacing(12)
+        # Topo: abas (controle segmentado) e, numa cápsula ao lado, histórico e tema.
+        self.tools = ToolGroup(self.theme, self.calculator)
+        self.tools.add(self.history_button)
+        self.tools.add(self.theme_button)
         top = QHBoxLayout()
-        top.setSpacing(6)
+        top.setSpacing(8)
         top.addWidget(self.tabs, 1)
-        top.addWidget(self.history_button)
-        top.addWidget(self.theme_button)
+        top.addWidget(self.tools, 0, Qt.AlignmentFlag.AlignTop)
         column.addLayout(top)
         column.addWidget(self.display)
 
         self.percentage_button = GlassButton("Porcentagem", self.theme, role="function", small=True, parent=self)
-        self.percentage_button.setFixedHeight(30)
+        self.percentage_button.setFixedSize(132, 32)
         self.percentage_button.setAccessibleName("Porcentagem")
         self.percentage_button.setToolTip("Abrir painel de porcentagem")
         self.percentage_button.clicked.connect(self.toggle_percentage_panel)
@@ -161,8 +164,8 @@ class MainWindow(QMainWindow):
         self._drawer_animation.finished.connect(self._drawer_animation_finished)
 
         self._root = QHBoxLayout(central)
-        self._root.setContentsMargins(12, 10, 12, 12)
-        self._root.setSpacing(12)
+        self._root.setContentsMargins(16, 14, 16, 16)
+        self._root.setSpacing(16)
         self._root.addWidget(self.calculator, 1)
 
         self.confirm_dialog: ConfirmDialog | None = None
@@ -338,7 +341,7 @@ class MainWindow(QMainWindow):
         central = self.centralWidget()
         top = self.tabs.mapTo(central, QPoint(0, self.tabs.height())).y() + 8
         width = min(PANEL_WIDTH + 20, central.width() - 48)
-        rect = central.rect().adjusted(central.width() - width - 12, top, -12, -12)
+        rect = central.rect().adjusted(central.width() - width - 16, top, -16, -16)
         return rect
 
     def _update_history_layout(self) -> None:

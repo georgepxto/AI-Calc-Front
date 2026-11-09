@@ -194,3 +194,11 @@ Funções exigem parênteses (`sin 30` mostra "Use parênteses: sin(30)").
 - Etapa 5A: licença MIT, em nome de Francisco Aurélio.
 - Etapa 5B: executável de um arquivo só (`AI Calc.exe`, sem console), publicado como anexo de uma
   Release no GitHub; o README explica o aviso do Windows para executáveis sem assinatura.
+- Redesign liquid glass: paleta neutra (branco-gelo no claro, grafite no escuro) com um único
+  acento laranja em operadores e "="; substitui as cores da Etapa 3C (lavanda, coral, roxo e
+  turquesa). O ícone do app não mudou.
+- Redesign liquid glass: teclas em cápsula, abas como controle segmentado com lente deslizante
+  (260 ms), histórico e tema numa cápsula no topo, histórico como lista com divisórias.
+- Redesign liquid glass: teclados reorganizados por grupo (controles, números, operadores na última
+  coluna). Na Comum, `⌫` foi para o lado do `C` e `%` para o lado da vírgula; na Científica, as
+  inversas ficam abaixo de sin/cos/tan e o "=" no canto inferior direito.

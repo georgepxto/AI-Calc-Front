@@ -3,21 +3,24 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPalette
+from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPainterPath, QPalette
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from .glass import paint_glass
+from .glass import paint_glass, with_alpha
 from .theme import DISPLAY_ALPHA, ThemeManager
 
-RESULT_POINT_SIZE = 30
+RESULT_POINT_SIZE = 36
 RESULT_MIN_POINT_SIZE = 16
-DISPLAY_RADIUS = 16
+DISPLAY_RADIUS = 24
+CHIP_PADDING = (9, 4)       # folga do chip DEG/RAD (lados, cima/baixo)
 
 
-def _point_size(label: QLabel, size: int, bold: bool = False) -> None:
+def _point_size(label: QLabel, size: int, bold: bool = False, light: bool = False) -> None:
     font = QFont(label.font())
     font.setPointSize(size)
     font.setBold(bold)
+    if light:
+        font.setWeight(QFont.Weight.Light)
     label.setFont(font)
 
 
@@ -49,10 +52,12 @@ class Display(QFrame):
         self.angle_mode_label.setAccessibleName("Modo de ângulo")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 10, 14, 10)
+        layout.setContentsMargins(20, 14, 20, 12)
         layout.setSpacing(2)
         top = QHBoxLayout()
         top.setSpacing(8)
+        self.angle_mode_label.setContentsMargins(CHIP_PADDING[0], CHIP_PADDING[1],
+                                                 CHIP_PADDING[0], CHIP_PADDING[1])
         top.addWidget(self.angle_mode_label, 0, Qt.AlignmentFlag.AlignTop)
         top.addWidget(self.expression_label, 1)
         layout.addLayout(top)
@@ -61,12 +66,12 @@ class Display(QFrame):
         layout.addWidget(self.result_label)
         layout.addWidget(self.message_label)
         self.expression_label.setMinimumHeight(20)
-        self.result_label.setMinimumHeight(48)
+        self.result_label.setMinimumHeight(56)
         self.message_label.setMinimumHeight(20)
 
         _point_size(self.expression_label, 12)
         _point_size(self.angle_mode_label, 9, bold=True)
-        _point_size(self.result_label, RESULT_POINT_SIZE, bold=True)
+        _point_size(self.result_label, RESULT_POINT_SIZE, light=True)
         _point_size(self.message_label, 10)
         theme.changed.connect(self.apply_colors)
         self.apply_colors()
@@ -89,9 +94,15 @@ class Display(QFrame):
     def paintEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = QRectF(self.rect()).adjusted(1, 1, -1, -3)
+        rect = QRectF(self.rect()).adjusted(1, 1, -1, -4)
         theme = self._theme
         paint_glass(painter, rect, DISPLAY_RADIUS, theme, theme.hex("display_bg"), DISPLAY_ALPHA)
+
+        # Chip discreto atrás do modo de ângulo (DEG/RAD).
+        chip = QRectF(self.angle_mode_label.geometry())
+        path = QPainterPath()
+        path.addRoundedRect(chip, chip.height() / 2, chip.height() / 2)
+        painter.fillPath(path, with_alpha(theme.hex("text_muted"), 0.12))
 
     def show_state(self, expression: str, result: str, message: str, is_error: bool) -> None:
         self._expression = expression
@@ -113,7 +124,7 @@ class Display(QFrame):
         self._refresh()
 
     def _refresh(self) -> None:
-        width = max(10, self.contentsRect().width() - 28)
+        width = max(10, self.contentsRect().width() - 40)
 
         # Enquanto se digita, a conta fica na linha grande; depois do "=",
         # ela sobe para a linha de cima e o resultado ocupa a linha grande.

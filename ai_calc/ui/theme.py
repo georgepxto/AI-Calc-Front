@@ -23,95 +23,99 @@ DARK = "escuro"
 THEME_TRANSITION_MS = 450
 
 # Vidro: opacidade de cada superfície sobre o fundo e intensidade dos brilhos.
-KEY_ALPHA = 0.80        # teclas, abas e botão de tema
-DISPLAY_ALPHA = 0.70    # visor
-ACCENT_ALPHA = 0.94     # tecla "=" e aba selecionada
-GLOW_ALPHA = 0.55       # manchas de cor do fundo
-TOP_TINT = 0.18         # quanto o topo da superfície clareia (degradê)
-SHEEN_ALPHA = 0.45      # brilho na metade de cima
+KEY_ALPHA = 0.74        # teclas, abas e botões do topo
+FUNCTION_ALPHA = 0.38   # teclas de função: vidro mais transparente, ficam em segundo plano
+DISPLAY_ALPHA = 0.64    # visor e painéis
+ACCENT_ALPHA = 0.95     # operadores, tecla "=" e aba selecionada
+GLOW_ALPHA = 0.42       # brilhos de cor do fundo
+TOP_TINT = 0.16         # quanto o topo da superfície clareia (degradê)
+SHEEN_ALPHA = 0.42      # brilho na metade de cima
 HOVER_ALPHA = 0.12      # clareada ao passar o mouse
-RIM_ALPHA = 0.60        # borda clara no alto
-SHADOW_ALPHA = 0.18     # sombra suave embaixo
+RIM_ALPHA = 0.85        # reflexo na borda de cima (vidro líquido)
+GLINT_ALPHA = 0.40      # reflexo fino na borda de baixo
+SHADOW_ALPHA = 0.12     # sombra difusa embaixo
 DIM_ALPHA = 0.40        # escurecimento atrás da janela de confirmação
-DIALOG_ALPHA = 0.94     # cartão da janela de confirmação e gaveta do histórico
+DIALOG_ALPHA = 0.97     # cartão da janela de confirmação e gaveta do histórico
 
-# Claro: azul-gelo, lavanda e coral. Escuro: azul-marinho profundo (nunca
-# preto), roxo suave e turquesa.
+# Paleta neutra no estilo "liquid glass": claro em branco-gelo e escuro em grafite
+# (nunca preto puro), com um único acento laranja para operadores e "=".
 PALETTES: dict[str, dict[str, str]] = {
     LIGHT: {
-        "window_top": "#F3F7FC",
-        "window_bottom": "#E2EAF6",
-        "glow_a": "#C9BFF2",
-        "glow_b": "#F7B7A3",
-        "text": "#172033",
-        "text_muted": "#4A5468",
+        "window_top": "#F4F5F8",
+        "window_bottom": "#E3E6EC",
+        "glow_a": "#9EC5FF",
+        "glow_b": "#FFC89A",
+        "text": "#111318",
+        "text_muted": "#4B5160",
         "error": "#B42318",
         "glass_rim": "#FFFFFF",
-        "glass_edge": "#9AA8C0",
-        "shadow": "#2A3A5C",
+        "glass_edge": "#A3AAB8",
+        "shadow": "#1B2030",
         "display_bg": "#FFFFFF",
         "key_bg": "#FFFFFF",
-        "key_pressed": "#DCE5F4",
-        "operator_bg": "#E6E1F7",
-        "operator_pressed": "#D0C7EE",
-        "function_bg": "#E2ECF8",
-        "function_pressed": "#C9DAF0",
-        "action_bg": "#FBE3DC",
-        "action_pressed": "#F5C9BB",
-        "equals_bg": "#962C14",
-        "equals_hover": "#862711",
-        "equals_pressed": "#76220E",
-        "equals_text": "#FFFFFF",
-        "tab_bg": "#FFFFFF",
-        "tab_selected_bg": "#463A92",
-        "tab_selected_text": "#FFFFFF",
-        "tab_disabled_bg": "#E3E8F0",
-        "tab_disabled_text": "#56606F",
-        "focus": "#0B1F44",
-        "focus_on_accent": "#FFD166",
-        "icon": "#4B3F99",
-        "tooltip_bg": "#172033",
+        "key_pressed": "#E3E6EC",
+        "operator_bg": "#EE7300",
+        "operator_pressed": "#CF6400",
+        "operator_text": "#1F1000",
+        "function_bg": "#F3F5F8",
+        "function_pressed": "#DCE1E9",
+        "action_bg": "#C9CFDA",
+        "action_pressed": "#B6BDCA",
+        "equals_bg": "#E86A00",
+        "equals_hover": "#F57C00",
+        "equals_pressed": "#C95C00",
+        "equals_text": "#1F1000",
+        "tab_bg": "#E3E6EC",
+        "tab_selected_bg": "#FFFFFF",
+        "tab_selected_text": "#111318",
+        "tab_disabled_bg": "#E6E8ED",
+        "tab_disabled_text": "#59606E",
+        "focus": "#0A5BC4",
+        "focus_on_accent": "#111318",
+        "icon": "#2B2F38",
+        "tooltip_bg": "#111318",
         "tooltip_text": "#FFFFFF",
-        "scroll_handle": "#6F7B93",
+        "scroll_handle": "#6E7585",
         "trig_sin": "#B0246A",
         "trig_cos": "#1F5FAE",
         "trig_tan": "#7A5600",
     },
     DARK: {
-        "window_top": "#0B1530",
-        "window_bottom": "#13224A",
-        "glow_a": "#5B47C8",
-        "glow_b": "#1FA89B",
-        "text": "#E8EEF8",
-        "text_muted": "#B8C4D9",
-        "error": "#FFB3AC",
-        "glass_rim": "#A9BCF2",
-        "glass_edge": "#3A4D7A",
-        "shadow": "#000814",
-        "display_bg": "#0F1C3D",
-        "key_bg": "#1A2C55",
-        "key_pressed": "#2B4580",
-        "operator_bg": "#352D6B",
-        "operator_pressed": "#45397F",
-        "function_bg": "#1F3560",
-        "function_pressed": "#2A4677",
-        "action_bg": "#3A2B5E",
-        "action_pressed": "#4A3874",
-        "equals_bg": "#2EC4B6",
-        "equals_hover": "#45D3C6",
-        "equals_pressed": "#24A699",
-        "equals_text": "#06201E",
-        "tab_bg": "#1A2C55",
-        "tab_selected_bg": "#B9A8FF",
-        "tab_selected_text": "#14102E",
-        "tab_disabled_bg": "#15233F",
-        "tab_disabled_text": "#BCC6D9",
-        "focus": "#FFD166",
-        "focus_on_accent": "#06201E",
-        "icon": "#FFD166",
-        "tooltip_bg": "#E8EEF8",
-        "tooltip_text": "#0E1A33",
-        "scroll_handle": "#9AA9CC",
+        "window_top": "#0C0D11",
+        "window_bottom": "#17191F",
+        "glow_a": "#2B4C8C",
+        "glow_b": "#7A3F12",
+        "text": "#F2F4F8",
+        "text_muted": "#BCC3D0",
+        "error": "#FF8A80",
+        "glass_rim": "#C9D2E6",
+        "glass_edge": "#454B58",
+        "shadow": "#000000",
+        "display_bg": "#1C1F26",
+        "key_bg": "#282B33",
+        "key_pressed": "#353943",
+        "operator_bg": "#FFA51F",
+        "operator_pressed": "#E8900A",
+        "operator_text": "#1F1000",
+        "function_bg": "#20232A",
+        "function_pressed": "#2C3039",
+        "action_bg": "#454A56",
+        "action_pressed": "#535967",
+        "equals_bg": "#FFB340",
+        "equals_hover": "#FFC266",
+        "equals_pressed": "#F09A12",
+        "equals_text": "#1F1000",
+        "tab_bg": "#2A2D35",
+        "tab_selected_bg": "#5E6370",
+        "tab_selected_text": "#FFFFFF",
+        "tab_disabled_bg": "#22252C",
+        "tab_disabled_text": "#B4BBC9",
+        "focus": "#8CC8FF",
+        "focus_on_accent": "#1F1000",
+        "icon": "#FFB340",
+        "tooltip_bg": "#F2F4F8",
+        "tooltip_text": "#111318",
+        "scroll_handle": "#8D94A5",
         "trig_sin": "#FFB3D9",
         "trig_cos": "#A8D6FF",
         "trig_tan": "#F5C451",
@@ -123,8 +127,8 @@ PALETTES: dict[str, dict[str, str]] = {
 # (fundo, fundo apertado, texto, opacidade, cor do contorno de foco).
 ROLE_COLORS: dict[str, tuple[str, str, str, float, str]] = {
     "digit": ("key_bg", "key_pressed", "text", KEY_ALPHA, "focus"),
-    "operator": ("operator_bg", "operator_pressed", "text", KEY_ALPHA, "focus"),
-    "function": ("function_bg", "function_pressed", "text", KEY_ALPHA, "focus"),
+    "operator": ("operator_bg", "operator_pressed", "operator_text", ACCENT_ALPHA, "focus_on_accent"),
+    "function": ("function_bg", "function_pressed", "text", FUNCTION_ALPHA, "focus"),
     "action": ("action_bg", "action_pressed", "text", KEY_ALPHA, "focus"),
     "equals": ("equals_bg", "equals_pressed", "equals_text", ACCENT_ALPHA, "focus_on_accent"),
     "theme": ("tab_bg", "key_pressed", "icon", KEY_ALPHA, "focus"),

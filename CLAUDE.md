@@ -147,6 +147,26 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
 - Testes: `tests/ajudantes.py` (`distancia` entre cores, usada pelos testes de janela).
 - Fluxo de trabalho: uma branch por etapa, PR no GitHub e merge depois do ok do Francisco.
 
+## Redesign liquid glass (feito)
+
+- Branch `redesign-liquid-glass`. Mockup no canvas de design "AI Calc · Liquid Glass".
+- Paleta neutra (`theme.py`): claro em branco-gelo, escuro em grafite; acento laranja só em
+  operadores e "=" (texto `operator_text`/`equals_text` escuro, para passar 4,5:1). Teclas de função
+  com `FUNCTION_ALPHA` (vidro mais transparente). Contrastes continuam testados.
+- `glass.py`: `paint_glass` com sombra difusa em camadas (`paint_shadow`), borda especular
+  (forte no alto, volta de leve embaixo) e reflexo fino na borda de baixo (`GLINT_ALPHA`);
+  `capsule_radius` limita o raio à metade da altura. Teclas, campos e chips são cápsulas.
+- `tabs.py`: `GlassTabBar` é um controle segmentado (uma cápsula só) com a lente da aba escolhida
+  deslizando em `LENS_MS` (260 ms; instantâneo com "reduzir movimento"). Contorno de foco só
+  quando o foco veio do teclado.
+- `glass_button.py`: `flat=True` (sem vidro próprio, só realce) para os botões dentro de outra
+  superfície; `ToolGroup` é a cápsula do topo com histórico e tema.
+- Teclados (`keypad.py`): linha de controles `C ⌫ ( )`, números em vidro, operadores na última
+  coluna. Científica: três linhas de funções (inversas abaixo de sin/cos/tan), depois o mesmo
+  bloco da Comum com uma coluna a mais para π, e, % e ;. O "=" fica no canto inferior direito.
+- Histórico: lista com divisórias dentro de um painel só (itens `flat`), etiqueta DEG/RAD em chip.
+- Visor: número grande em peso leve, modo DEG/RAD num chip.
+
 ## Interface (Etapas 3 e 4)
 
 - Aprovado: pytest-qt (offscreen); histórico em painel lateral recolhível; `preferencias.json`
@@ -156,7 +176,7 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
 
 - PySide6 com `QPainter` e `QPropertyAnimation`; janela redimensionável com tamanho mínimo.
 - "Vidro líquido" simulado com translucidez, gradientes, bordas e brilho (blur real pesa e é instável).
-- Tema claro (azul-gelo, lavanda, coral) e escuro (azul-marinho profundo, nunca preto puro; roxo suave; turquesa). A troca muda TODOS os elementos, com transição suave.
+- Tema claro (branco-gelo) e escuro (grafite, nunca preto puro), com um único acento laranja (operadores e "="); ver "Redesign liquid glass". A troca muda TODOS os elementos, com transição suave.
 - Cores de seno, cosseno e tangente diferentes, mais rótulo escrito e estilo de linha (não depender só da cor).
 - Respeitar a preferência de "reduzir movimento" do sistema.
 - Histórico: 20 itens, JSON em pasta de configuração do sistema (usar `QStandardPaths`), etiqueta DEG/RAD nos itens com trigonometria, clique insere só o número do resultado.
