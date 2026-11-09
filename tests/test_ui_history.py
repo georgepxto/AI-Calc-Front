@@ -182,11 +182,17 @@ def test_confirmacao_segue_o_tema(qtbot, janela, nome):
 
 
 # --- painel fixo x gaveta -----------------------------------------------------
-def test_janela_larga_mostra_painel_fixo(janela):
+def test_janela_larga_mostra_painel_fixo(qtbot, janela):
     assert janela.width() >= DOCK_MIN_WIDTH
     assert janela.history_docked
     assert janela.history_panel.isVisible()
-    assert not janela.history_button.isVisible()
+    # Como no macOS, o botão de barra lateral esconde e mostra o histórico fixo.
+    assert janela.history_button.isVisible()
+    assert janela.history_button.accessibleName() == "Esconder histórico"
+    qtbot.mouseClick(janela.history_button, Qt.MouseButton.LeftButton)
+    assert not janela.history_docked and not janela.history_panel.isVisible()
+    qtbot.mouseClick(janela.history_button, Qt.MouseButton.LeftButton)
+    assert janela.history_docked and janela.history_panel.isVisible()
 
 
 def test_janela_estreita_usa_gaveta(qtbot, tmp_path):

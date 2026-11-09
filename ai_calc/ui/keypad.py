@@ -128,7 +128,7 @@ class KeypadMetrics:
 
 
 COMMON_METRICS = KeypadMetrics(max_key=64, gap=12, aspect=1.0, min_key=44)
-SCIENTIFIC_METRICS = KeypadMetrics(max_key=48, gap=8, aspect=1.45, min_key=30)
+SCIENTIFIC_METRICS = KeypadMetrics(max_key=44, gap=9, aspect=1.82, min_key=30)
 
 # Folga em volta de cada tecla: espaço para a sombra e para a tecla "estufar" ao apertar.
 KEY_PAD = 4

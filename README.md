@@ -49,23 +49,17 @@ etapas pequenas, cada uma com testes automáticos.
 </p>
 
 **Visual**
-- Visual inspirado na calculadora atual da Apple (iOS 26, "liquid glass"): teclas em cápsula com
-  reflexo de vidro, fundo liso (preto no escuro, cinza-gelo no claro) e o número grande e fino
-  direto sobre o fundo, sem caixa em volta.
-- Mesmo layout da Apple na aba Comum: `⌫ AC % ÷` em cima, números em cinza, operadores em laranja
-  com símbolo branco na última coluna e `( ) 0 , =` embaixo. A tecla `( )` abre ou fecha o
-  parêntese conforme a conta. Na Científica, três linhas de funções em cima e uma coluna de
-  funções à esquerda do mesmo teclado.
+- Visual no estilo da calculadora do macOS: fundo grafite (ou cinza-claro), teclas opacas em
+  cápsula, operadores no laranja da Apple e o número grande e fino direto sobre o fundo.
+- Aba Comum com o layout da Apple: `⌫ AC % ÷` em cima e `( ) 0 , =` embaixo. A tecla `( )` abre
+  ou fecha o parêntese conforme a conta. Na Científica, três linhas de funções em cima e uma
+  coluna de funções à esquerda do mesmo teclado.
+- Topo como no macOS: botão de barra lateral (histórico) à esquerda, seletor de modo no centro
+  ("Científica ⌄") e tema à direita. O histórico fica numa barra lateral à esquerda.
 - Animações como as da Apple: a tecla estufa ao apertar e volta com efeito de mola, e o operador
   escolhido fica destacado até a próxima tecla.
-- Os modos (Comum, Científica, Trigonometria) ficam num menu ☰, como na Calculadora do Windows,
-  com o nome do modo atual ao lado; histórico e tema ficam numa cápsula à direita. O botão
-  Porcentagem fica no visor.
-- Em tela cheia, a calculadora e o histórico ficam juntos e centralizados. No tema escuro, a
-  barra de título do Windows também fica escura.
-- Transição de tema de 450 ms. Um segundo clique no meio da transição a faz voltar do ponto em
-  que estava.
-- Abre seguindo o tema do Windows. Depois de escolhido no botão de lua/sol, vale o tema escolhido.
+- Em tela cheia, a barra lateral vai de cima a baixo e a calculadora fica centralizada. No tema
+  escuro, a barra de título do Windows também fica escura.
 - Com "reduzir movimento" ligado no Windows,
   tudo fica instantâneo.
 

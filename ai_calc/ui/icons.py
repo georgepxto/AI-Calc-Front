@@ -36,27 +36,51 @@ def paint_moon(painter: QPainter, rect: QRectF, color: QColor) -> None:
     painter.drawPath(full.subtracted(bite))
 
 
-def paint_clock(painter: QPainter, rect: QRectF, color: QColor) -> None:
-    """Relógio (ícone do histórico)."""
+def paint_sidebar(painter: QPainter, rect: QRectF, color: QColor) -> None:
+    """Janela com barra lateral (ícone do histórico, como no macOS)."""
     unit = min(rect.width(), rect.height()) / 64
     center = rect.center()
-    pen = QPen(color, 5 * unit, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+    pen = QPen(color, 4.5 * unit, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+    pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
     painter.setPen(pen)
     painter.setBrush(Qt.BrushStyle.NoBrush)
-    painter.drawEllipse(center, 25 * unit, 25 * unit)
-    painter.drawLine(center, center + QPointF(0, -15 * unit))
-    painter.drawLine(center, center + QPointF(11 * unit, 7 * unit))
+    box = QRectF(center.x() - 26 * unit, center.y() - 20 * unit, 52 * unit, 40 * unit)
+    painter.drawRoundedRect(box, 8 * unit, 8 * unit)
+    x = box.left() + 19 * unit
+    painter.drawLine(QPointF(x, box.top()), QPointF(x, box.bottom()))
 
 
-def paint_menu(painter: QPainter, rect: QRectF, color: QColor) -> None:
-    """Três linhas (ícone do menu de modos, como na Calculadora do Windows)."""
+def paint_trash(painter: QPainter, rect: QRectF, color: QColor) -> None:
+    """Lixeira (limpar histórico)."""
     unit = min(rect.width(), rect.height()) / 64
-    center = rect.center()
-    pen = QPen(color, 5 * unit, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+    c = rect.center()
+    pen = QPen(color, 4.5 * unit, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+    pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
     painter.setPen(pen)
-    for dy in (-16, 0, 16):
-        y = center.y() + dy * unit
-        painter.drawLine(QPointF(center.x() - 22 * unit, y), QPointF(center.x() + 22 * unit, y))
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawLine(QPointF(c.x() - 22 * unit, c.y() - 14 * unit), QPointF(c.x() + 22 * unit, c.y() - 14 * unit))
+    painter.drawLine(QPointF(c.x() - 8 * unit, c.y() - 14 * unit), QPointF(c.x() - 8 * unit, c.y() - 21 * unit))
+    painter.drawLine(QPointF(c.x() - 8 * unit, c.y() - 21 * unit), QPointF(c.x() + 8 * unit, c.y() - 21 * unit))
+    painter.drawLine(QPointF(c.x() + 8 * unit, c.y() - 21 * unit), QPointF(c.x() + 8 * unit, c.y() - 14 * unit))
+    body = QPainterPath()
+    body.moveTo(c.x() - 16 * unit, c.y() - 14 * unit)
+    body.lineTo(c.x() - 13 * unit, c.y() + 22 * unit)
+    body.lineTo(c.x() + 13 * unit, c.y() + 22 * unit)
+    body.lineTo(c.x() + 16 * unit, c.y() - 14 * unit)
+    painter.drawPath(body)
+    for dx in (-5, 5):
+        painter.drawLine(QPointF(c.x() + dx * unit, c.y() - 5 * unit), QPointF(c.x() + dx * unit, c.y() + 13 * unit))
+
+
+def paint_chevron(painter: QPainter, rect: QRectF, color: QColor) -> None:
+    """Seta para baixo (abre a lista de modos)."""
+    unit = min(rect.width(), rect.height()) / 64
+    c = rect.center()
+    pen = QPen(color, 6 * unit, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+    pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+    painter.setPen(pen)
+    painter.drawPolyline([QPointF(c.x() - 14 * unit, c.y() - 7 * unit), QPointF(c.x(), c.y() + 7 * unit),
+                          QPointF(c.x() + 14 * unit, c.y() - 7 * unit)])
 
 
 def paint_app_icon(painter: QPainter, size: int) -> None:

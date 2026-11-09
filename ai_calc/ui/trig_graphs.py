@@ -12,7 +12,7 @@ from .glass import paint_glass, with_alpha
 from .theme import DISPLAY_ALPHA, ThemeManager
 from .trig_circle import FUNCTION_STYLES, function_pen
 
-PANEL_RADIUS = 24
+PANEL_RADIUS = 16
 MARGIN_LEFT = 34
 MARGIN_RIGHT = 14
 MARGIN_TOP = 30         # espaço para a legenda

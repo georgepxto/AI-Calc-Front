@@ -22,6 +22,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QWidget
 
 from .theme import (
+    EDGE_ALPHA,
     GLINT_ALPHA,
     GLOW_ALPHA,
     HOVER_ALPHA,
@@ -48,7 +49,7 @@ def capsule_radius(rect: QRectF) -> float:
 def paint_shadow(painter: QPainter, rect: QRectF, radius: float, theme: ThemeManager) -> None:
     """Sombra difusa: camadas cada vez maiores e mais fracas (imitando um desfoque)."""
     color = theme.hex("shadow")
-    for dy, grow, weight in ((1.0, 0.0, 1.0), (2.0, 0.6, 0.45), (3.0, 1.2, 0.2)):
+    for dy, grow, weight in ((0.5, 0.0, 1.0), (1.5, 0.5, 0.4)):
         layer = QPainterPath()
         shifted = rect.translated(0, dy).adjusted(-grow, -grow / 2, grow, grow)
         layer.addRoundedRect(shifted, radius + grow, radius + grow)
@@ -93,7 +94,7 @@ def paint_glass(
     edge = QLinearGradient(rect.topLeft(), rect.bottomLeft())
     edge.setColorAt(0.0, with_alpha(rim, RIM_ALPHA))
     edge.setColorAt(0.35, with_alpha(rim, RIM_ALPHA * 0.25))
-    edge.setColorAt(0.65, with_alpha(theme.hex("glass_edge"), 0.30))
+    edge.setColorAt(0.65, with_alpha(theme.hex("glass_edge"), EDGE_ALPHA))
     edge.setColorAt(1.0, with_alpha(rim, RIM_ALPHA * 0.45))
     painter.setPen(QPen(QBrush(edge), 1.0))
     painter.setBrush(Qt.BrushStyle.NoBrush)
@@ -101,7 +102,7 @@ def paint_glass(
 
     # Reflexo fino na borda de baixo, como a luz atravessando o vidro.
     inset = max(radius, rect.width() * 0.18)
-    if rect.width() - 2 * inset > 40:          # em teclas redondas viraria um risquinho
+    if GLINT_ALPHA > 0 and rect.width() - 2 * inset > 40:   # em teclas redondas viraria um risquinho
         y = rect.bottom() - 1.0
         glint = QLinearGradient(QPointF(rect.left() + inset, y), QPointF(rect.right() - inset, y))
         glint.setColorAt(0.0, with_alpha(rim, 0.0))

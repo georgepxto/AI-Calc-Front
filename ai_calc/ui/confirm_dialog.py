@@ -11,7 +11,7 @@ from .glass_button import GlassButton
 from .theme import DIALOG_ALPHA, DIM_ALPHA, ThemeManager
 
 CARD_WIDTH = 320
-CARD_RADIUS = 26
+CARD_RADIUS = 16
 
 
 class _Card(QFrame):

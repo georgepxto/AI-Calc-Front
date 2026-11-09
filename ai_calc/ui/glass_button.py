@@ -1,15 +1,14 @@
-"""Botões de vidro: teclas da calculadora, botões do topo (tema e histórico) e a
-cápsula que agrupa os botões do topo."""
+"""Botões: teclas da calculadora e botões do topo (barra lateral, modo e tema)."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import QEasingCurve, QRectF, QSize, Qt, QVariantAnimation
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPainterPath
-from PySide6.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QWidget
+from PySide6.QtWidgets import QPushButton, QSizePolicy, QWidget
 
 from .glass import capsule_radius, paint_focus_ring, paint_glass, with_alpha
-from .icons import paint_clock, paint_menu, paint_moon, paint_sun
-from .theme import HOVER_ALPHA, KEY_ALPHA, ROLE_COLORS, ThemeManager, mix
+from .icons import paint_chevron, paint_moon, paint_sidebar, paint_sun, paint_trash
+from .theme import HOVER_ALPHA, ROLE_COLORS, ThemeManager, mix
 
 KEY_RADIUS = 999       # teclas em cápsula (o raio é limitado à metade da altura)
 TOOL_SIZE = 34         # botões redondos dentro da cápsula do topo
@@ -260,7 +259,7 @@ class ThemeToggleButton(GlassButton):
 
 
 class HistoryToggleButton(GlassButton):
-    """Botão que mostra/esconde o histórico quando a janela está estreita."""
+    """Botão de barra lateral: mostra/esconde o histórico (como no macOS)."""
 
     def __init__(self, theme: ThemeManager, parent: QWidget | None = None) -> None:
         super().__init__("", theme, role="theme", parent=parent, flat=True)
@@ -271,49 +270,52 @@ class HistoryToggleButton(GlassButton):
     def paint_content(self, painter: QPainter, rect: QRectF, color) -> None:
         icon_rect = QRectF(0, 0, 20, 20)
         icon_rect.moveCenter(rect.center())
-        paint_clock(painter, icon_rect, color)
+        paint_sidebar(painter, icon_rect, color)
 
 
-class MenuButton(GlassButton):
-    """Botão ☰ que abre o menu de modos (Comum, Científica, Trigonometria)."""
+class TrashButton(GlassButton):
+    """Lixeira pequena (limpar histórico)."""
 
     def __init__(self, theme: ThemeManager, parent: QWidget | None = None) -> None:
-        super().__init__("", theme, role="theme", parent=parent, flat=True)
-        self.setObjectName("menuButton")
-        self.setAccessibleName("Abrir menu de modos")
-        self.setToolTip("Modos da calculadora")
+        super().__init__("Limpar", theme, role="theme", parent=parent, flat=True)
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.setFixedSize(QSize(TOOL_SIZE, TOOL_SIZE))
+        self.setFixedSize(QSize(30, 30))
 
     def paint_content(self, painter: QPainter, rect: QRectF, color) -> None:
-        icon_rect = QRectF(0, 0, 20, 20)
+        icon_rect = QRectF(0, 0, 18, 18)
         icon_rect.moveCenter(rect.center())
-        paint_menu(painter, icon_rect, color)
+        paint_trash(painter, icon_rect, color)
 
 
-class ToolGroup(QWidget):
-    """Cápsula de vidro que agrupa os botões redondos do topo (histórico e tema)."""
+class ModeButton(GlassButton):
+    """Pílula com o nome do modo e uma seta ("Científica ⌄"), no centro do topo."""
 
-    PADDING = 3
+    HEIGHT = 30
 
-    def __init__(self, theme: ThemeManager, parent: QWidget | None = None) -> None:
-        super().__init__(parent)
-        self._theme = theme
+    def __init__(self, text: str, theme: ThemeManager, parent: QWidget | None = None) -> None:
+        super().__init__(text, theme, role="tab", small=True, parent=parent)
+        self.setObjectName("modeButton")
         self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self._layout = QHBoxLayout(self)
-        pad = self.PADDING
-        # 2 em cima e 4 embaixo: com a sombra, o grupo tem os mesmos 40 px das outras peças do topo.
-        self._layout.setContentsMargins(pad, 2, pad, 4)
-        self._layout.setSpacing(2)
+        font = QFont(self.font())
+        font.setPointSize(10)
+        font.setWeight(QFont.Weight.DemiBold)
+        self.setFont(font)
+        self._fit()
 
-    def add(self, button: QWidget) -> None:
-        self._layout.addWidget(button)
+    def setText(self, text: str) -> None:  # noqa: N802 (nome do Qt)
+        super().setText(text)
+        self._fit()
 
-    def paintEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
-        if not any(child.isVisible() for child in self.findChildren(GlassButton)):
-            return
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = QRectF(self.rect()).adjusted(1, 1, -1, -3)
-        theme = self._theme
-        paint_glass(painter, rect, capsule_radius(rect), theme, theme.hex("tab_bg"), KEY_ALPHA)
+    def _fit(self) -> None:
+        width = QFontMetrics(self.font()).horizontalAdvance(self.text())
+        self.setFixedSize(QSize(width + 46, self.HEIGHT + 3))
+
+    def paint_content(self, painter: QPainter, rect: QRectF, color) -> None:
+        painter.setPen(color)
+        painter.setFont(self.font())
+        text_rect = rect.adjusted(14, 0, -26, 0)
+        painter.drawText(text_rect, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, self.text())
+        chevron = QRectF(0, 0, 10, 10)
+        chevron.moveCenter(rect.center())
+        chevron.moveRight(rect.right() - 12)
+        paint_chevron(painter, chevron, self._theme.color("text_muted"))

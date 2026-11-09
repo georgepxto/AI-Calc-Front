@@ -52,10 +52,14 @@ def test_limpar_e_apagar_ficam_juntos():
                 assert abs(actions.index(BACKSPACE) - actions.index(CLEAR)) == 1
 
 
-def test_botoes_do_topo_ficam_na_capsula(qtbot):
+def test_topo_barra_lateral_modo_e_tema(qtbot):
     window = _janela(qtbot, movimento=False)
-    assert window.theme_button.parent() is window.tools
-    assert window.history_button.parent() is window.tools
+    historico = window.history_button.geometry()
+    modo = window.mode_title.geometry()
+    tema = window.theme_button.geometry()
+    assert historico.right() < modo.left() and modo.right() < tema.left()
+    meio = window.calculator.width() / 2
+    assert abs(modo.center().x() - meio) <= 2            # seletor de modo centralizado
 
 
 def test_operador_escolhido_fica_destacado(qtbot):
@@ -123,25 +127,31 @@ def test_menu_de_modos(qtbot):
     assert not window.menu_open
 
 
-def test_topo_nao_muda_de_tamanho_ao_trocar_de_modo(qtbot):
+def test_topo_nao_muda_de_lugar_ao_trocar_de_modo(qtbot):
     window = _janela(qtbot, movimento=False)
     window.resize(420, 760)
     qtbot.wait(20)
-    larguras = set()
+    lugares, centros = set(), []
     for aba in (0, 1, 0):
         window.tabs.setCurrentIndex(aba)
         qtbot.wait(20)
-        larguras.add(window.menu_group.width())
-        larguras.add(window.tools.width())
-    assert len(larguras) <= 2          # cápsula do menu e cápsula de histórico/tema, sempre iguais
+        centros.append(window.mode_title.geometry().center().x())
+        lugares.add((window.history_button.geometry().x(), window.theme_button.geometry().x()))
+    assert len(lugares) == 1                       # botões das pontas parados
+    assert max(centros) - min(centros) <= 1        # seletor sempre no centro
 
 
 def test_tela_cheia_centraliza_o_conteudo(qtbot):
     window = _janela(qtbot, movimento=False)
     window.resize(1920, 1040)
     qtbot.wait(30)
-    corpo = window.body.geometry()
-    central = window.centralWidget()
-    assert abs(corpo.left() - (central.width() - corpo.right() - 1)) <= 1      # centralizado
-    assert corpo.width() < central.width()
-    assert window.history_panel.geometry().left() - window.calculator.geometry().right() < 40
+    # Barra lateral encostada à esquerda, de cima a baixo (como no macOS).
+    painel = window.history_panel.geometry()
+    assert painel.left() == 0 and painel.height() == window.body.height()
+    # Teclas no meio da área da calculadora, sem grudar no rodapé.
+    teclado = window.current_keypad
+    grade = teclado.grid_rect
+    meio_teclas = teclado.mapTo(window.calculator, grade.center().toPoint()).x()
+    assert abs(meio_teclas - window.calculator.width() / 2) <= 2
+    fundo = teclado.mapTo(window.calculator, grade.bottomLeft().toPoint()).y()
+    assert window.calculator.height() - fundo > 100

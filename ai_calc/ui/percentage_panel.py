@@ -36,7 +36,7 @@ from .glass_field import GlassField
 from .tabs import GlassTabBar
 from .theme import DIALOG_ALPHA, ThemeManager
 
-PANEL_RADIUS = 24
+PANEL_RADIUS = 16
 PANEL_PADDING = 16
 RESULT_HEIGHT = 92          # área do resultado: altura fixa, o painel não "pula" ao calcular
 

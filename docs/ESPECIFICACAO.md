@@ -219,3 +219,11 @@ Funções exigem parênteses (`sin 30` mostra "Use parênteses: sin(30)").
 - Tema escuro: reflexos do vidro mais discretos e barra de título do Windows escura.
 - Porcentagem: o painel cobre o visor e o teclado (fundo sólido), as opções passam a se chamar
   "Parte", "Variação" e "Desconto" (nome completo na dica) e o resultado aparece em destaque.
+- Redesign final aprovado pelo George ("macOS Tahoe refinado"): fundo grafite `#1C1C1E` no escuro
+  (substitui o preto puro) e `#EFEFF4` no claro; teclas opacas; operadores no laranja original
+  da Apple (#FF9500 / #FF9F0A) com símbolo branco, mesmo abaixo de 3:1 (decisão de design).
+- Topo: barra lateral à esquerda, seletor de modo "Científica ⌄" no centro (abre a lista de
+  modos) e tema à direita; substitui o botão ☰.
+- Histórico como barra lateral à esquerda, plana, com lixeira para limpar; o botão de barra
+  lateral esconde/mostra na janela larga e abre a gaveta (pela esquerda) na estreita.
+- Científica com teclas em cápsula de 80 × 44 px; visor sem chips ("DEG" e "Porcentagem" em texto).

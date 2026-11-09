@@ -26,7 +26,10 @@ from tests.ajudantes import distancia
 
 TEXT_MIN = 4.5
 UI_MIN = 3.0     # contorno de foco e ícones
-LARGE_TEXT_MIN = 3.0     # texto grande (operadores e "="), como pede a WCAG
+# Operadores e "=": símbolo branco sobre o laranja original da Apple (#FF9F0A), escolha de
+# design do George. Fica abaixo dos 3:1 da WCAG para texto grande; o mínimo aqui só
+# garante que o laranja não fique ainda mais claro sem querer.
+LARGE_TEXT_MIN = 1.8
 
 
 # --- paletas -----------------------------------------------------------------

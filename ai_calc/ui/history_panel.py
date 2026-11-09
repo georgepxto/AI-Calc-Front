@@ -19,12 +19,12 @@ from PySide6.QtWidgets import (
 
 from ..core.history import HistoryEntry
 from .glass import paint_glass, set_text_color, with_alpha
-from .glass_button import GlassButton
+from .glass_button import GlassButton, TrashButton
 from .theme import DIALOG_ALPHA, DISPLAY_ALPHA, ThemeManager
 
-PANEL_RADIUS = 24
-ITEM_HEIGHT = 60
-ITEM_RADIUS = 14
+PANEL_RADIUS = 16
+ITEM_HEIGHT = 56
+ITEM_RADIUS = 8
 MODE_NAMES = {"DEG": "graus", "RAD": "radianos"}
 
 
@@ -83,8 +83,8 @@ class HistoryItemButton(GlassButton):
             painter.drawText(chip, Qt.AlignmentFlag.AlignCenter, self.entry.angle_mode)
 
         big = QFont(self.font())
-        big.setPointSize(14)
-        big.setWeight(QFont.Weight.DemiBold)
+        big.setPointSize(13)
+        big.setWeight(QFont.Weight.Medium)
         painter.setFont(big)
         painter.setPen(color)
         result = QFontMetrics(big).elidedText(
@@ -133,20 +133,19 @@ class HistoryPanel(QFrame):
 
         self.title = QLabel("Histórico", self)
         title_font = QFont(self.title.font())
-        title_font.setPointSize(13)
+        title_font.setPointSize(10)
         title_font.setWeight(QFont.Weight.DemiBold)
         self.title.setFont(title_font)
 
-        self.clear_button = GlassButton("Limpar", theme, role="action", small=True, parent=self)
+        self.clear_button = TrashButton(theme, self)
         self.clear_button.setAccessibleName("Limpar histórico")
         self.clear_button.setToolTip("Limpar histórico")
-        self.clear_button.setFixedSize(QSize(80, 34))
         self.clear_button.clicked.connect(self.clear_requested)
 
         self.close_button = GlassButton("✕", theme, role="theme", small=True, parent=self)
         self.close_button.setAccessibleName("Fechar histórico")
         self.close_button.setToolTip("Fechar histórico")
-        self.close_button.setFixedSize(QSize(38, 38))
+        self.close_button.setFixedSize(QSize(30, 30))
         self.close_button.clicked.connect(self.close_requested)
         self.close_button.hide()
 
@@ -173,14 +172,16 @@ class HistoryPanel(QFrame):
         self._list.setAutoFillBackground(False)
 
         header = QHBoxLayout()
-        header.setSpacing(6)
+        header.setContentsMargins(8, 0, 4, 0)
+        header.setSpacing(4)
         header.addWidget(self.title, 1)
         header.addWidget(self.clear_button)
         header.addWidget(self.close_button)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 14, 8, 14)
-        layout.setSpacing(8)
+        layout.setContentsMargins(8, 10, 4, 10)
+        layout.setSpacing(6)
+        self._layout = layout
         layout.addLayout(header)
         layout.addWidget(self.empty_label, 1)
         layout.addWidget(self.scroll, 1)
@@ -194,10 +195,14 @@ class HistoryPanel(QFrame):
         return self._list.findChildren(HistoryItemButton)
 
     def set_drawer_mode(self, drawer: bool) -> None:
-        # Como gaveta, o painel fica sobre o teclado: vidro mais opaco para não misturar textos.
+        # Fixo: barra lateral plana encostada na borda. Gaveta: cartão sólido por cima.
         self.close_button.setVisible(drawer)
         self._alpha = DIALOG_ALPHA if drawer else DISPLAY_ALPHA
         self.update()
+
+    @property
+    def drawer_mode(self) -> bool:
+        return self._alpha == DIALOG_ALPHA
 
     def show_entries(self, entries: list[HistoryEntry]) -> None:
         self._entries = list(entries)
@@ -226,8 +231,15 @@ class HistoryPanel(QFrame):
     def paintEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = QRectF(self.rect()).adjusted(1, 1, -1, -4)
         theme = self._theme
+        if not self.drawer_mode:
+            # Barra lateral (como no macOS): superfície plana e um fio separando da calculadora.
+            painter.fillRect(self.rect(), with_alpha(theme.hex("display_bg"), self._alpha))
+            painter.setPen(QPen(with_alpha(theme.hex("text_muted"), 0.18), 1.0))
+            x = self.width() - 0.5
+            painter.drawLine(QPointF(x, 0), QPointF(x, self.height()))
+            return
+        rect = QRectF(self.rect()).adjusted(1, 1, -1, -4)
         if self._alpha == DIALOG_ALPHA:
             # Gaveta por cima do teclado: sem desfoque real, qualquer transparência deixaria as
             # teclas aparecendo como "fantasmas". Uma base sólida por baixo do vidro resolve.

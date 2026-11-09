@@ -1,7 +1,7 @@
-"""Menu de modos, como o da Calculadora do Windows.
+"""Menu de modos (como o menu de um botão do macOS).
 
-O botão ☰ no topo abre um cartão de vidro que desliza da esquerda, por cima da
-janela levemente escurecida. Clicar num modo troca a aba e fecha o menu; clicar
+O seletor de modo no topo abre um cartão logo abaixo dele, por cima da janela
+levemente escurecida. Clicar num modo troca a aba e fecha o menu; clicar
 fora, apertar Esc ou o ☰ de novo também fecha.
 """
 
@@ -15,10 +15,10 @@ from .glass import paint_glass, set_text_color, with_alpha
 from .tabs import GlassTabBar
 from .theme import DIALOG_ALPHA, DIM_ALPHA, ThemeManager
 
-MENU_WIDTH = 240
-MENU_RADIUS = 22
-MENU_PADDING = 12
-MENU_MS = 320          # entrada do cartão (com uma mola leve)
+MENU_WIDTH = 220
+MENU_RADIUS = 14
+MENU_PADDING = 8
+MENU_MS = 220          # entrada do cartão (com uma mola leve)
 
 
 class NavCard(QFrame):
@@ -90,21 +90,23 @@ class NavMenu(QWidget):
         return self._open
 
     def open_at(self, anchor: QPoint) -> None:
-        """Abre o menu com o canto de cima do cartão em "anchor" (coordenadas da camada)."""
+        """Abre o menu logo abaixo de "anchor" (meio de cima do cartão, coordenadas da camada)."""
         parent = self.parentWidget()
         self.setGeometry(QRect(0, 0, parent.width(), parent.height()))
         self.card.adjustSize()
         self._open = True
         self.show()
         self.raise_()
-        start = QPoint(anchor.x() - 24, anchor.y())
-        self._move(start, anchor)
+        x = max(8, min(anchor.x() - self.card.width() // 2, self.width() - self.card.width() - 8))
+        end = QPoint(x, anchor.y())
+        start = QPoint(x, anchor.y() - 10)        # desce um pouco ao abrir, como um menu do macOS
+        self._move(start, end)
 
     def close_menu(self) -> None:
         if not self._open:
             return
         self._open = False
-        end = QPoint(self.card.x() - 24, self.card.y())
+        end = QPoint(self.card.x(), self.card.y() - 10)
         self._move(self.card.pos(), end)
 
     def _move(self, start: QPoint, end: QPoint) -> None:
@@ -143,4 +145,4 @@ class NavMenu(QWidget):
         if not self._open:
             return
         painter = QPainter(self)
-        painter.fillRect(self.rect(), with_alpha(self._theme.hex("shadow"), DIM_ALPHA * 0.6))
+        painter.fillRect(self.rect(), with_alpha(self._theme.hex("shadow"), DIM_ALPHA * 0.25))

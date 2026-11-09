@@ -26,7 +26,7 @@ from ..core.trig_input import describe
 from .glass import paint_focus_ring, paint_glass, with_alpha
 from .theme import DISPLAY_ALPHA, ThemeManager
 
-PANEL_RADIUS = 24
+PANEL_RADIUS = 16
 LABEL_MARGIN = 30       # espaço em volta do círculo para os rótulos
 KEY_STEP = 1.0          # setas: 1°
 KEY_BIG_STEP = 15.0     # Shift + setas: 15°

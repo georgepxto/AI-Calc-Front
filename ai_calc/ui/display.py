@@ -6,16 +6,14 @@ direto sobre o fundo, alinhado à direita.
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRectF, Qt
-from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPainterPath, QPalette
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QFontMetrics, QPalette
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from .glass import with_alpha
 from .theme import ThemeManager
 
 RESULT_POINT_SIZE = 50
 RESULT_MIN_POINT_SIZE = 16
-CHIP_PADDING = (9, 4)       # folga do chip DEG/RAD (lados, cima/baixo)
 
 
 def _point_size(label: QLabel, size: int, bold: bool = False, light: bool = False) -> None:
@@ -61,8 +59,7 @@ class Display(QFrame):
         top = QHBoxLayout()
         top.setSpacing(8)
         self._top = top
-        self.angle_mode_label.setContentsMargins(CHIP_PADDING[0], CHIP_PADDING[1],
-                                                 CHIP_PADDING[0], CHIP_PADDING[1])
+        self.angle_mode_label.setContentsMargins(0, 0, 4, 0)
         top.addWidget(self.angle_mode_label, 0, Qt.AlignmentFlag.AlignVCenter)
         top.addWidget(self.expression_label, 1)
         layout.addLayout(top)
@@ -99,16 +96,7 @@ class Display(QFrame):
             label.setPalette(palette)
         self.update()
 
-    def paintEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        theme = self._theme
-
-        # Chip discreto atrás do modo de ângulo (DEG/RAD).
-        chip = QRectF(self.angle_mode_label.geometry())
-        path = QPainterPath()
-        path.addRoundedRect(chip, chip.height() / 2, chip.height() / 2)
-        painter.fillPath(path, with_alpha(theme.hex("text_muted"), 0.12))
+    # Sem caixa nem chips: o visor é só texto sobre o fundo, como no macOS (nada a pintar).
 
     def set_side_margins(self, left: int, right: int) -> None:
         """Margens dos lados (o número alinha com a borda das teclas)."""

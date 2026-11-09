@@ -22,50 +22,53 @@ DARK = "escuro"
 # Duração da transição de tema (fácil de ajustar).
 THEME_TRANSITION_MS = 450
 
-# Vidro: opacidade de cada superfície sobre o fundo e intensidade dos brilhos.
-KEY_ALPHA = 0.90        # teclas, abas e botões do topo
-FUNCTION_ALPHA = 0.90   # teclas de função (cor própria, mais discreta)
-DISPLAY_ALPHA = 0.80    # painéis (histórico, trigonometria, porcentagem)
-ACCENT_ALPHA = 0.97     # operadores, tecla "=" e aba selecionada
-GLOW_ALPHA = 0.0        # fundo liso, como na calculadora da Apple
-TOP_TINT = 0.10         # quanto o topo da superfície clareia (degradê)
-SHEEN_ALPHA = 0.22      # brilho na metade de cima
-HOVER_ALPHA = 0.12      # clareada ao passar o mouse
-RIM_ALPHA = 0.55        # reflexo na borda de cima (vidro líquido)
-GLINT_ALPHA = 0.30      # reflexo fino na borda de baixo
-SHADOW_ALPHA = 0.10     # sombra difusa embaixo
+# Superfícies: opacidade sobre o fundo e intensidade dos reflexos. No estilo do macOS,
+# as teclas são opacas e os reflexos são só um fio de luz na borda de cima.
+KEY_ALPHA = 1.0         # teclas e botões
+FUNCTION_ALPHA = 1.0    # teclas de função (cor própria, mais escura)
+DISPLAY_ALPHA = 0.72    # barra lateral e painéis (deixam o fundo aparecer de leve)
+ACCENT_ALPHA = 1.0      # operadores, "=" e seleção
+GLOW_ALPHA = 0.0        # fundo liso
+TOP_TINT = 0.04         # quanto o topo da superfície clareia
+SHEEN_ALPHA = 0.06      # brilho na metade de cima
+HOVER_ALPHA = 0.10      # clareada ao passar o mouse
+RIM_ALPHA = 0.22        # fio de luz na borda de cima
+EDGE_ALPHA = 0.10       # contorno discreto nas laterais
+GLINT_ALPHA = 0.0       # sem reflexo embaixo
+SHADOW_ALPHA = 0.14     # sombra curta embaixo
 DIM_ALPHA = 0.40        # escurecimento atrás da janela de confirmação
-DIALOG_ALPHA = 0.97     # cartão da janela de confirmação e gaveta do histórico
+DIALOG_ALPHA = 0.97     # cartões por cima de tudo (confirmação, gaveta, menu)
 
-# Cores da calculadora da Apple (iOS 26): fundo liso, números em cinza, linha de cima
-# em cinza mais claro e operadores em laranja com símbolo branco. O laranja é um pouco
-# mais fechado que o da Apple para o símbolo branco ter contraste 3:1 (texto grande).
+# Cores da calculadora do macOS (Tahoe): grafite no escuro, cinza-claro no claro,
+# números em cinza, funções em cinza mais escuro, controles em cinza mais claro e
+# operadores no laranja original da Apple (#FF9500 no claro, #FF9F0A no escuro, como no
+# iOS) com símbolo branco.
 PALETTES: dict[str, dict[str, str]] = {
     LIGHT: {
-        "window_top": "#F2F2F7",
-        "window_bottom": "#ECECF1",
+        "window_top": "#EFEFF4",
+        "window_bottom": "#EFEFF4",
         "glow_a": "#D9E6FF",
         "glow_b": "#FFE4CC",
         "text": "#000000",
         "text_muted": "#5E5E64",
         "error": "#C4291C",
         "glass_rim": "#FFFFFF",
-        "glass_edge": "#B5B5BC",
+        "glass_edge": "#000000",
         "shadow": "#1C1C24",
         "display_bg": "#FFFFFF",
         "key_bg": "#FFFFFF",
         "key_pressed": "#D9D9DE",
-        "operator_bg": "#CC5E00",
-        "operator_pressed": "#A84C00",
+        "operator_bg": "#FF9500",
+        "operator_pressed": "#E08300",
         "operator_text": "#FFFFFF",
         "operator_selected_bg": "#FFFFFF",
-        "function_bg": "#EAEAEF",
-        "function_pressed": "#CFCFD5",
+        "function_bg": "#E4E4E9",
+        "function_pressed": "#CDCDD2",
         "action_bg": "#D1D1D6",
-        "action_pressed": "#BBBBC1",
-        "equals_bg": "#CC5E00",
-        "equals_hover": "#BD5700",
-        "equals_pressed": "#A84C00",
+        "action_pressed": "#B9B9BF",
+        "equals_bg": "#FF9500",
+        "equals_hover": "#F28C00",
+        "equals_pressed": "#E08300",
         "equals_text": "#FFFFFF",
         "tab_bg": "#E3E3E8",
         "tab_selected_bg": "#FFFFFF",
@@ -74,7 +77,7 @@ PALETTES: dict[str, dict[str, str]] = {
         "tab_disabled_text": "#5E5E64",
         "focus": "#0A5BC4",
         "focus_on_accent": "#000000",
-        "icon": "#1C1C1E",
+        "icon": "#3A3A3C",
         "tooltip_bg": "#1C1C1E",
         "tooltip_text": "#FFFFFF",
         "scroll_handle": "#7A7A80",
@@ -83,39 +86,39 @@ PALETTES: dict[str, dict[str, str]] = {
         "trig_tan": "#7A5600",
     },
     DARK: {
-        "window_top": "#000000",
-        "window_bottom": "#000000",
+        "window_top": "#1C1C1E",
+        "window_bottom": "#1C1C1E",
         "glow_a": "#1A2A4A",
         "glow_b": "#3A2410",
         "text": "#FFFFFF",
-        "text_muted": "#C2C2C7",
+        "text_muted": "#C7C7CC",
         "error": "#FF6961",
-        "glass_rim": "#5C5C63",
-        "glass_edge": "#2C2C30",
+        "glass_rim": "#FFFFFF",
+        "glass_edge": "#000000",
         "shadow": "#000000",
-        "display_bg": "#1C1C1E",
-        "key_bg": "#333336",
-        "key_pressed": "#4A4A4E",
-        "operator_bg": "#BF5600",
-        "operator_pressed": "#9E4700",
+        "display_bg": "#2C2C2E",
+        "key_bg": "#3A3A3C",
+        "key_pressed": "#4E4E52",
+        "operator_bg": "#FF9F0A",
+        "operator_pressed": "#E58A00",
         "operator_text": "#FFFFFF",
         "operator_selected_bg": "#F2F2F7",
-        "function_bg": "#1F1F21",
-        "function_pressed": "#2E2E31",
-        "action_bg": "#5C5C5F",
-        "action_pressed": "#68686C",
-        "equals_bg": "#BF5600",
-        "equals_hover": "#B05000",
-        "equals_pressed": "#9E4700",
+        "function_bg": "#2A2A2C",
+        "function_pressed": "#444447",
+        "action_bg": "#5A5A5E",
+        "action_pressed": "#636367",
+        "equals_bg": "#FF9F0A",
+        "equals_hover": "#FFAA26",
+        "equals_pressed": "#E58A00",
         "equals_text": "#FFFFFF",
-        "tab_bg": "#1C1C1E",
+        "tab_bg": "#2C2C2E",
         "tab_selected_bg": "#48484A",
         "tab_selected_text": "#FFFFFF",
-        "tab_disabled_bg": "#1A1A1C",
-        "tab_disabled_text": "#C2C2C7",
-        "focus": "#B3DCFF",
+        "tab_disabled_bg": "#232325",
+        "tab_disabled_text": "#C7C7CC",
+        "focus": "#B8DCFF",
         "focus_on_accent": "#000000",
-        "icon": "#FFFFFF",
+        "icon": "#D1D1D6",
         "tooltip_bg": "#F2F2F7",
         "tooltip_text": "#000000",
         "scroll_handle": "#8E8E93",
@@ -146,7 +149,7 @@ ROLE_COLORS: dict[str, tuple[str, str, str, float, str]] = {
     "tab_disabled": ("tab_disabled_bg", "tab_disabled_bg", "tab_disabled_text", KEY_ALPHA, "focus"),
     # Itens do histórico não mudam de cor ao apertar (só encolhem): o texto discreto
     # da conta precisa de contraste 4,5:1 em qualquer estado.
-    "history": ("key_bg", "key_bg", "text", KEY_ALPHA, "focus"),
+    "history": ("display_bg", "display_bg", "text", KEY_ALPHA, "focus"),
 }
 
 

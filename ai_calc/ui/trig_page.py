@@ -197,7 +197,7 @@ class InfoCard(QFrame):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = QRectF(self.rect()).adjusted(1, 1, -1, -3)
-        paint_glass(painter, rect, 22, self._theme, self._theme.hex("display_bg"), DISPLAY_ALPHA)
+        paint_glass(painter, rect, 16, self._theme, self._theme.hex("display_bg"), DISPLAY_ALPHA)
 
 
 class TrigPage(QWidget):
