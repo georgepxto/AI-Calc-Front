@@ -101,7 +101,7 @@ def paint_glass(
 
     # Reflexo fino na borda de baixo, como a luz atravessando o vidro.
     inset = max(radius, rect.width() * 0.18)
-    if rect.width() > 2 * inset:
+    if rect.width() - 2 * inset > 40:          # em teclas redondas viraria um risquinho
         y = rect.bottom() - 1.0
         glint = QLinearGradient(QPointF(rect.left() + inset, y), QPointF(rect.right() - inset, y))
         glint.setColorAt(0.0, with_alpha(rim, 0.0))

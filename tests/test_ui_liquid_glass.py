@@ -45,7 +45,7 @@ def test_limpar_e_apagar_ficam_juntos():
         for row in rows:
             actions = [key.action for key in row]
             if CLEAR in actions:
-                assert actions.index(BACKSPACE) == actions.index(CLEAR) + 1
+                assert abs(actions.index(BACKSPACE) - actions.index(CLEAR)) == 1
 
 
 def test_botoes_do_topo_ficam_na_capsula(qtbot):

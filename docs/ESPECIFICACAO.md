@@ -36,7 +36,7 @@ Para rodar os testes: `pip install -r requirements.txt` e depois `pytest`.
 
 ### Painel Porcentagem (Etapa 6)
 
-O botão **Porcentagem** fica abaixo do visor na aba **Comum**. O painel aceita
+O botão **Porcentagem** fica no canto de cima do visor na aba **Comum**. O painel aceita
 ponto ou vírgula decimal.
 
 | Operação | Cálculo | Exemplo |
@@ -194,11 +194,15 @@ Funções exigem parênteses (`sin 30` mostra "Use parênteses: sin(30)").
 - Etapa 5A: licença MIT, em nome de Francisco Aurélio.
 - Etapa 5B: executável de um arquivo só (`AI Calc.exe`, sem console), publicado como anexo de uma
   Release no GitHub; o README explica o aviso do Windows para executáveis sem assinatura.
-- Redesign liquid glass: paleta neutra (branco-gelo no claro, grafite no escuro) com um único
-  acento laranja em operadores e "="; substitui as cores da Etapa 3C (lavanda, coral, roxo e
-  turquesa). O ícone do app não mudou.
-- Redesign liquid glass: teclas em cápsula, abas como controle segmentado com lente deslizante
-  (260 ms), histórico e tema numa cápsula no topo, histórico como lista com divisórias.
-- Redesign liquid glass: teclados reorganizados por grupo (controles, números, operadores na última
-  coluna). Na Comum, `⌫` foi para o lado do `C` e `%` para o lado da vírgula; na Científica, as
-  inversas ficam abaixo de sin/cos/tan e o "=" no canto inferior direito.
+- Redesign estilo calculadora da Apple (iOS 26): fundo liso (preto no escuro, substituindo a regra
+  "nunca preto puro"; cinza-gelo no claro), teclas em cápsula de vidro, números em cinza e
+  operadores em laranja com símbolo branco. Substitui as cores da Etapa 3C. O ícone não mudou.
+- O laranja é mais fechado que o da Apple para o símbolo branco ter contraste 3:1 (texto grande,
+  WCAG); o restante continua com 4,5:1.
+- Aba Comum com o layout do iOS 26: `⌫ AC % ÷` / `7 8 9 ×` / `4 5 6 −` / `1 2 3 +` / `( ) 0 , =`.
+  A tecla `( )` abre ou fecha o parêntese conforme a conta (no teclado físico, `(` e `)` seguem
+  separados). "C" passou a se chamar "AC".
+- Científica: três linhas de funções em cima e uma coluna `( ) ; e π` à esquerda do teclado Comum.
+- Visor sem caixa; o botão Porcentagem foi da linha abaixo do visor para o canto de cima do visor.
+- Abas como controle segmentado com lente deslizante (260 ms); histórico e tema numa cápsula no
+  topo; histórico como lista com divisórias.

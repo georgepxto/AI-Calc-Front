@@ -147,25 +147,27 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
 - Testes: `tests/ajudantes.py` (`distancia` entre cores, usada pelos testes de janela).
 - Fluxo de trabalho: uma branch por etapa, PR no GitHub e merge depois do ok do Francisco.
 
-## Redesign liquid glass (feito)
+## Redesign estilo calculadora da Apple (feito)
 
-- Branch `redesign-liquid-glass`. Mockup no canvas de design "AI Calc · Liquid Glass".
-- Paleta neutra (`theme.py`): claro em branco-gelo, escuro em grafite; acento laranja só em
-  operadores e "=" (texto `operator_text`/`equals_text` escuro, para passar 4,5:1). Teclas de função
-  com `FUNCTION_ALPHA` (vidro mais transparente). Contrastes continuam testados.
-- `glass.py`: `paint_glass` com sombra difusa em camadas (`paint_shadow`), borda especular
-  (forte no alto, volta de leve embaixo) e reflexo fino na borda de baixo (`GLINT_ALPHA`);
-  `capsule_radius` limita o raio à metade da altura. Teclas, campos e chips são cápsulas.
-- `tabs.py`: `GlassTabBar` é um controle segmentado (uma cápsula só) com a lente da aba escolhida
-  deslizando em `LENS_MS` (260 ms; instantâneo com "reduzir movimento"). Contorno de foco só
-  quando o foco veio do teclado.
-- `glass_button.py`: `flat=True` (sem vidro próprio, só realce) para os botões dentro de outra
-  superfície; `ToolGroup` é a cápsula do topo com histórico e tema.
-- Teclados (`keypad.py`): linha de controles `C ⌫ ( )`, números em vidro, operadores na última
-  coluna. Científica: três linhas de funções (inversas abaixo de sin/cos/tan), depois o mesmo
-  bloco da Comum com uma coluna a mais para π, e, % e ;. O "=" fica no canto inferior direito.
-- Histórico: lista com divisórias dentro de um painel só (itens `flat`), etiqueta DEG/RAD em chip.
-- Visor: número grande em peso leve, modo DEG/RAD num chip.
+- Branch `redesign-liquid-glass`. Referência: calculadora do iOS 26 (liquid glass).
+- Paleta (`theme.py`): fundo liso (`#000000` no escuro, `#F2F2F7` no claro, `GLOW_ALPHA = 0`),
+  números em cinza (`key_bg`), linha de cima em cinza mais claro (`action_bg`), funções em cinza
+  mais escuro (`function_bg`) e operadores/"=" em laranja com símbolo branco. O laranja é mais
+  fechado que o da Apple (#FF9F0A) para o branco ter 3:1; os testes aceitam 3:1 para operadores e
+  "=" por serem texto grande (WCAG), e 4,5:1 continua valendo para o resto.
+- `glass.py`: `paint_glass` com sombra difusa em camadas, borda especular e reflexo fino embaixo
+  (só em teclas largas); `capsule_radius` limita o raio à metade da altura.
+- `tabs.py`: controle segmentado com lente deslizante (`LENS_MS` 260 ms; instantâneo com
+  "reduzir movimento"); contorno de foco só quando o foco veio do teclado.
+- `glass_button.py`: `flat=True` para botões sobre outra superfície; `ToolGroup` (cápsula do topo
+  com histórico e tema); `auto_font`/`fit_font`: fonte proporcional à altura da tecla.
+- Teclados (`keypad.py`): Comum igual ao iOS 26 (`⌫ AC % ÷` / 789× / 456− / 123+ / `( ) 0 , =`).
+  A tecla `( )` (ação `PARENTHESES`) chama `ExpressionEditor.parenthesis()` no core: fecha se há
+  parêntese aberto e a conta termina em número, `)`, `!`, `%`, `π` ou `e`; senão abre. Científica:
+  três linhas de funções e uma coluna de funções (`( ) ; e π`) à esquerda do mesmo teclado.
+- Visor sem caixa (número em 54 pt leve, direto sobre o fundo); Porcentagem e DEG/RAD em chips no
+  canto de cima do visor (`Display.add_tool`).
+- Histórico: lista com divisórias num painel só; como gaveta, tem base sólida (sem "fantasmas").
 
 ## Interface (Etapas 3 e 4)
 
@@ -176,7 +178,7 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
 
 - PySide6 com `QPainter` e `QPropertyAnimation`; janela redimensionável com tamanho mínimo.
 - "Vidro líquido" simulado com translucidez, gradientes, bordas e brilho (blur real pesa e é instável).
-- Tema claro (branco-gelo) e escuro (grafite, nunca preto puro), com um único acento laranja (operadores e "="); ver "Redesign liquid glass". A troca muda TODOS os elementos, com transição suave.
+- Tema claro (cinza-gelo) e escuro (preto, como na Apple), com laranja só em operadores e "="; ver "Redesign estilo calculadora da Apple". A troca muda TODOS os elementos, com transição suave.
 - Cores de seno, cosseno e tangente diferentes, mais rótulo escrito e estilo de linha (não depender só da cor).
 - Respeitar a preferência de "reduzir movimento" do sistema.
 - Histórico: 20 itens, JSON em pasta de configuração do sistema (usar `QStandardPaths`), etiqueta DEG/RAD nos itens com trigonometria, clique insere só o número do resultado.

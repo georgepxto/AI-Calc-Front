@@ -49,17 +49,17 @@ etapas pequenas, cada uma com testes automáticos.
 </p>
 
 **Visual**
-- Visual de "vidro líquido" inspirado no da Apple: teclas em cápsula, visor e painéis de vidro
-  translúcido com reflexo na borda de cima, um reflexo fino embaixo e sombra difusa, sobre um
-  fundo neutro com dois brilhos suaves.
+- Visual inspirado na calculadora atual da Apple (iOS 26, "liquid glass"): teclas em cápsula com
+  reflexo de vidro, fundo liso (preto no escuro, cinza-gelo no claro) e o número grande e fino
+  direto sobre o fundo, sem caixa em volta.
+- Mesmo layout da Apple na aba Comum: `⌫ AC % ÷` em cima, números em cinza, operadores em laranja
+  com símbolo branco na última coluna e `( ) 0 , =` embaixo. A tecla `( )` abre ou fecha o
+  parêntese conforme a conta. Na Científica, três linhas de funções em cima e uma coluna de
+  funções à esquerda do mesmo teclado.
 - Abas num controle segmentado, com a aba escolhida numa "lente" que desliza até ela; os botões
-  de histórico e de tema ficam juntos numa cápsula ao lado.
-- Teclado organizado em grupos: funções em vidro mais transparente, controles (`C`, `⌫`,
-  parênteses, `%`...) em cinza, números em vidro claro e os operadores em laranja, sempre na
-  última coluna, terminando no "=".
-- Tema claro (branco-gelo) e escuro (grafite, nunca preto puro), com um único acento laranja e
-  transição de 450 ms. Um segundo clique no meio da transição a faz voltar do ponto em que
-  estava.
+  de histórico e de tema ficam juntos numa cápsula ao lado. O botão Porcentagem fica no visor.
+- Transição de tema de 450 ms. Um segundo clique no meio da transição a faz voltar do ponto em
+  que estava.
 - Abre seguindo o tema do Windows. Depois de escolhido no botão de lua/sol, vale o tema escolhido.
 - Animações discretas de clique e de troca de aba. Com "reduzir movimento" ligado no Windows,
   tudo fica instantâneo.

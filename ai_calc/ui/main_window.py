@@ -25,6 +25,7 @@ from .motion import fade_in
 from .keypad import (
     ANGLE_MODE,
     BACKSPACE,
+    PARENTHESES,
     CLEAR,
     COMMON_KEYS,
     EVALUATE,
@@ -132,18 +133,12 @@ class MainWindow(QMainWindow):
         column.addWidget(self.display)
 
         self.percentage_button = GlassButton("Porcentagem", self.theme, role="function", small=True, parent=self)
-        self.percentage_button.setFixedSize(132, 32)
+        self.percentage_button.setFixedSize(112, 28)
         self.percentage_button.setAccessibleName("Porcentagem")
         self.percentage_button.setToolTip("Abrir painel de porcentagem")
         self.percentage_button.clicked.connect(self.toggle_percentage_panel)
-
-        self.common_tools = QWidget(self.calculator)
-        common_tools_layout = QHBoxLayout(self.common_tools)
-        common_tools_layout.setContentsMargins(0, 0, 0, 0)
-        common_tools_layout.setSpacing(6)
-        common_tools_layout.addWidget(self.percentage_button)
-        common_tools_layout.addStretch(1)
-        column.addWidget(self.common_tools)
+        # Fica no canto de cima do visor (só na aba Comum), sem ocupar uma linha própria.
+        self.display.add_tool(self.percentage_button)
 
         column.addWidget(self.pages, 1)
 
@@ -178,7 +173,7 @@ class MainWindow(QMainWindow):
 
         self.theme.apply()
         self._update_history_layout()
-        self.common_tools.setVisible(self.tabs.currentIndex() == COMMON_TAB)
+        self.percentage_button.setVisible(self.tabs.currentIndex() == COMMON_TAB)
         self._refresh()
 
     @property
@@ -214,6 +209,8 @@ class MainWindow(QMainWindow):
                 fade_in(self.display.result_label, self.theme)
         elif action == ANGLE_MODE:
             self.set_angle_mode("RAD" if self.angle_mode == "DEG" else "DEG")
+        elif action == PARENTHESES:
+            self.editor.parenthesis()
         self._refresh()
 
     def set_angle_mode(self, mode: str, save: bool = True) -> None:
@@ -235,7 +232,7 @@ class MainWindow(QMainWindow):
         # A aba Trigonometria não usa o visor e dá o espaço do histórico ao círculo
         # (o histórico continua na gaveta, pelo botão de relógio).
         self.display.setVisible(index != TRIG_TAB)
-        self.common_tools.setVisible(index == COMMON_TAB)
+        self.percentage_button.setVisible(index == COMMON_TAB)
         if index != COMMON_TAB and self._percentage_open:
             self.close_percentage_panel()
         self._update_history_layout()

@@ -21,6 +21,10 @@ _STARTS_NUMBER_BEFORE = "+−×÷^(;"
 # Depois destes caracteres, um número vindo do histórico entra com "×" na frente.
 _ENDS_OPERAND = ",)!%"
 
+# Depois destes caracteres a tecla "( )" fecha um parêntese aberto (fim de um número,
+# de uma constante ou de outro parêntese); depois de qualquer outro, ela abre um novo.
+_CLOSES_AFTER = ")!%πe"
+
 
 def as_operand(number: str) -> str:
     """Número pronto para continuar uma conta: negativo vai entre parênteses."""
@@ -53,6 +57,19 @@ class ExpressionEditor:
             key = "0,"
         if len(self.expression) + len(key) <= MAX_EXPRESSION_LENGTH:
             self.expression += key
+
+    def parenthesis(self) -> str:
+        """Tecla "( )": fecha um parêntese aberto se a conta pede, senão abre um.
+
+        Devolve o caractere inserido ("(" ou ")").
+        """
+        expression = "" if self._just_evaluated else self.expression
+        last = expression[-1:]
+        still_open = expression.count("(") > expression.count(")")
+        closes = still_open and bool(last) and (last.isdigit() or last in _CLOSES_AFTER)
+        key = ")" if closes else "("
+        self.insert(key)
+        return key
 
     def insert_value(self, number: str) -> None:
         """Insere um número pronto (ex.: resultado do histórico) na conta atual."""

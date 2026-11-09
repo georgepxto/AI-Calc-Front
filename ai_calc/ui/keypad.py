@@ -15,6 +15,7 @@ CLEAR = "clear"
 BACKSPACE = "backspace"
 EVALUATE = "evaluate"
 ANGLE_MODE = "angle_mode"
+PARENTHESES = "parentheses"     # tecla "( )": abre ou fecha, conforme a conta
 
 
 @dataclass(frozen=True)
@@ -45,35 +46,29 @@ def _action(label: str, name: str, insert: str) -> Key:
     return Key(label, name, "action", insert=insert)
 
 
-CLEAR_KEY = Key("C", "Limpar tudo", "action", action=CLEAR)
+CLEAR_KEY = Key("AC", "Limpar tudo", "action", action=CLEAR)
 BACKSPACE_KEY = Key("⌫", "Apagar último caractere", "action", action=BACKSPACE)
 
-# Organização (igual nas duas abas): controles em cinza na linha de cima, números em
-# vidro claro e os operadores em laranja sempre na última coluna, terminando no "=".
+# Layout da calculadora da Apple (iOS 26): "⌫ AC % ÷" em cima, números no meio,
+# operadores em laranja na última coluna terminando no "=".
 
 # Teclado Comum: 4 colunas, de cima para baixo.
 COMMON_KEYS: tuple[tuple[Key, ...], ...] = (
+    (BACKSPACE_KEY, CLEAR_KEY, _action("%", "Porcentagem", "%"), _operator("÷", "Dividir")),
+    (_digit("7", "Sete"), _digit("8", "Oito"), _digit("9", "Nove"), _operator("×", "Multiplicar")),
+    (_digit("4", "Quatro"), _digit("5", "Cinco"), _digit("6", "Seis"), _operator("−", "Subtrair")),
+    (_digit("1", "Um"), _digit("2", "Dois"), _digit("3", "Três"), _operator("+", "Somar")),
     (
-        CLEAR_KEY,
-        BACKSPACE_KEY,
-        _action("(", "Abre parêntese", "("),
-        _action(")", "Fecha parêntese", ")"),
-    ),
-    (_digit("7", "Sete"), _digit("8", "Oito"), _digit("9", "Nove"), _operator("÷", "Dividir")),
-    (_digit("4", "Quatro"), _digit("5", "Cinco"), _digit("6", "Seis"), _operator("×", "Multiplicar")),
-    (_digit("1", "Um"), _digit("2", "Dois"), _digit("3", "Três"), _operator("−", "Subtrair")),
-    (
+        Key("( )", "Parênteses: abre ou fecha", "action", action=PARENTHESES),
         _digit("0", "Zero"),
         Key(",", "Vírgula decimal", "digit", insert=","),
-        _action("%", "Porcentagem", "%"),
-        _operator("+", "Somar"),
+        Key("=", "Calcular resultado", "equals", action=EVALUATE),
     ),
-    (Key("=", "Calcular resultado", "equals", action=EVALUATE, column_span=4),),
 )
 
 # Teclado Científico: 5 colunas. Em cima, três linhas de funções (cada inversa logo
-# abaixo da sua função); embaixo, o mesmo bloco da aba Comum, com uma coluna a mais
-# para π, e, % e ;. A tecla DEG/RAD troca de rótulo conforme o modo.
+# abaixo da sua função). Embaixo, o mesmo teclado da aba Comum com uma coluna de
+# funções à esquerda, como a calculadora da Apple deitada. DEG/RAD troca de rótulo.
 SCIENTIFIC_KEYS: tuple[tuple[Key, ...], ...] = (
     (
         Key("DEG", "Modo de ângulo: graus", "function", action=ANGLE_MODE, small=True),
@@ -97,34 +92,31 @@ SCIENTIFIC_KEYS: tuple[tuple[Key, ...], ...] = (
         _function("|x|", "Valor absoluto", "abs("),
     ),
     (
-        CLEAR_KEY,
-        BACKSPACE_KEY,
-        _action("(", "Abre parêntese", "("),
-        _action(")", "Fecha parêntese", ")"),
-        _operator("÷", "Dividir"),
+        _function("(", "Abre parêntese", "("),
+        BACKSPACE_KEY, CLEAR_KEY, _action("%", "Porcentagem", "%"), _operator("÷", "Dividir"),
     ),
     (
-        _digit("7", "Sete"), _digit("8", "Oito"), _digit("9", "Nove"),
-        _action("π", "Pi", "π"),
-        _operator("×", "Multiplicar"),
+        _function(")", "Fecha parêntese", ")"),
+        _digit("7", "Sete"), _digit("8", "Oito"), _digit("9", "Nove"), _operator("×", "Multiplicar"),
     ),
     (
-        _digit("4", "Quatro"), _digit("5", "Cinco"), _digit("6", "Seis"),
-        _action("e", "Número de Euler", "e"),
-        _operator("−", "Subtrair"),
+        _function(";", "Separador de argumentos (ponto e vírgula)", ";"),
+        _digit("4", "Quatro"), _digit("5", "Cinco"), _digit("6", "Seis"), _operator("−", "Subtrair"),
     ),
     (
-        _digit("1", "Um"), _digit("2", "Dois"), _digit("3", "Três"),
-        _action("%", "Porcentagem", "%"),
-        _operator("+", "Somar"),
+        _function("e", "Número de Euler", "e"),
+        _digit("1", "Um"), _digit("2", "Dois"), _digit("3", "Três"), _operator("+", "Somar"),
     ),
     (
-        _digit("0", "Zero"),
+        _function("π", "Pi", "π"),
+        Key("0", "Zero", "digit", insert="0", column_span=2),
         Key(",", "Vírgula decimal", "digit", insert=","),
-        _action(";", "Separador de argumentos (ponto e vírgula)", ";"),
-        Key("=", "Calcular resultado", "equals", action=EVALUATE, column_span=2),
+        Key("=", "Calcular resultado", "equals", action=EVALUATE),
     ),
 )
+
+
+KEY_GAP = 10      # espaço entre as teclas (separa as cápsulas, como na Apple)
 
 
 class Keypad(QWidget):
@@ -146,7 +138,7 @@ class Keypad(QWidget):
         self._key_min_height = key_min_height
         grid = QGridLayout(self)
         grid.setContentsMargins(0, 0, 0, 0)
-        grid.setSpacing(8)
+        grid.setSpacing(KEY_GAP)
         for row_index, row in enumerate(rows):
             column = 0
             for key in row:
@@ -159,6 +151,7 @@ class Keypad(QWidget):
         button.setAccessibleName(key.accessible_name)
         button.setToolTip(key.accessible_name)
         button.setMinimumSize(48, self._key_min_height)
+        button.auto_font = True
         if key.action == BACKSPACE:
             button.setAutoRepeat(True)
         if key.action is not None:
@@ -166,6 +159,10 @@ class Keypad(QWidget):
         else:
             button.clicked.connect(lambda _=False, t=key.insert: self.inserted.emit(t))
         self._buttons[key.action or key.insert] = button
+        if key.action == PARENTHESES:
+            # Teclado físico: "(" e ")" também piscam a tecla "( )".
+            self._buttons.setdefault("(", button)
+            self._buttons.setdefault(")", button)
         return button
 
     def button(self, key: str) -> QPushButton | None:
@@ -175,6 +172,7 @@ class Keypad(QWidget):
     def set_key_text(self, key: str, label: str, accessible_name: str) -> None:
         button = self._buttons[key]
         button.setText(label)
+        button.fit_font()
         button.setAccessibleName(accessible_name)
         button.setToolTip(accessible_name)
 

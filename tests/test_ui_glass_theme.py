@@ -26,6 +26,7 @@ from tests.ajudantes import distancia
 
 TEXT_MIN = 4.5
 UI_MIN = 3.0     # contorno de foco e ícones
+LARGE_TEXT_MIN = 3.0     # texto grande (operadores e "="), como pede a WCAG
 
 
 # --- paletas -----------------------------------------------------------------
@@ -61,6 +62,9 @@ def test_contraste_das_teclas_e_abas(tema, papel):
     fundo, apertado, texto, opacidade, foco = ROLE_COLORS[papel]
     preenchimentos = {fundo, apertado} | ({"equals_hover"} if papel == "equals" else set())
     minimo_texto = UI_MIN if papel == "theme" else TEXT_MIN     # no botão de tema o "texto" é o ícone
+    if papel in ("operator", "equals"):
+        # Símbolos grandes (a partir de 18 px de altura): a WCAG pede 3:1 para texto grande.
+        minimo_texto = LARGE_TEXT_MIN
     for chave in preenchimentos:
         superficies = surface_colors(paleta, paleta[chave], opacidade, papel != "equals")
         assert min_contrast(paleta, texto, superficies) >= minimo_texto, chave

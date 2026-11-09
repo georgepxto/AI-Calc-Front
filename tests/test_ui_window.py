@@ -131,7 +131,7 @@ def test_teclas_recebem_foco_com_tab(janela):
 def test_tab_percorre_as_teclas(qtbot, janela):
     janela.common_keypad.button(CLEAR).setFocus()
     qtbot.keyClick(janela.focusWidget(), Qt.Key.Key_Tab)
-    assert janela.focusWidget() is janela.common_keypad.button(BACKSPACE)
+    assert janela.focusWidget() is janela.common_keypad.button("%")
 
 
 def test_espaco_aperta_a_tecla_em_foco(qtbot, janela):

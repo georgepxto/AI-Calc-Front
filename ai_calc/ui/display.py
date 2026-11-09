@@ -1,4 +1,8 @@
-"""Visor de vidro: conta em edição, resultado e uma linha de mensagem."""
+"""Visor: conta em edição, resultado e uma linha de mensagem.
+
+Como na calculadora da Apple, não há caixa em volta: o número fica grande e fino
+direto sobre o fundo, alinhado à direita.
+"""
 
 from __future__ import annotations
 
@@ -6,12 +10,11 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPainterPath, QPalette
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
-from .glass import paint_glass, with_alpha
-from .theme import DISPLAY_ALPHA, ThemeManager
+from .glass import with_alpha
+from .theme import ThemeManager
 
-RESULT_POINT_SIZE = 36
+RESULT_POINT_SIZE = 54
 RESULT_MIN_POINT_SIZE = 16
-DISPLAY_RADIUS = 24
 CHIP_PADDING = (9, 4)       # folga do chip DEG/RAD (lados, cima/baixo)
 
 
@@ -52,13 +55,14 @@ class Display(QFrame):
         self.angle_mode_label.setAccessibleName("Modo de ângulo")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 14, 20, 12)
+        layout.setContentsMargins(8, 4, 8, 4)
         layout.setSpacing(2)
         top = QHBoxLayout()
         top.setSpacing(8)
+        self._top = top
         self.angle_mode_label.setContentsMargins(CHIP_PADDING[0], CHIP_PADDING[1],
                                                  CHIP_PADDING[0], CHIP_PADDING[1])
-        top.addWidget(self.angle_mode_label, 0, Qt.AlignmentFlag.AlignTop)
+        top.addWidget(self.angle_mode_label, 0, Qt.AlignmentFlag.AlignVCenter)
         top.addWidget(self.expression_label, 1)
         layout.addLayout(top)
         for label in (self.expression_label, self.result_label, self.message_label):
@@ -66,7 +70,7 @@ class Display(QFrame):
         layout.addWidget(self.result_label)
         layout.addWidget(self.message_label)
         self.expression_label.setMinimumHeight(20)
-        self.result_label.setMinimumHeight(56)
+        self.result_label.setMinimumHeight(72)
         self.message_label.setMinimumHeight(20)
 
         _point_size(self.expression_label, 12)
@@ -94,15 +98,17 @@ class Display(QFrame):
     def paintEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        rect = QRectF(self.rect()).adjusted(1, 1, -1, -4)
         theme = self._theme
-        paint_glass(painter, rect, DISPLAY_RADIUS, theme, theme.hex("display_bg"), DISPLAY_ALPHA)
 
         # Chip discreto atrás do modo de ângulo (DEG/RAD).
         chip = QRectF(self.angle_mode_label.geometry())
         path = QPainterPath()
         path.addRoundedRect(chip, chip.height() / 2, chip.height() / 2)
         painter.fillPath(path, with_alpha(theme.hex("text_muted"), 0.12))
+
+    def add_tool(self, widget: QWidget) -> None:
+        """Põe um botão pequeno no canto de cima, ao lado do modo de ângulo."""
+        self._top.insertWidget(1, widget, 0, Qt.AlignmentFlag.AlignVCenter)
 
     def show_state(self, expression: str, result: str, message: str, is_error: bool) -> None:
         self._expression = expression
@@ -124,13 +130,19 @@ class Display(QFrame):
         self._refresh()
 
     def _refresh(self) -> None:
-        width = max(10, self.contentsRect().width() - 40)
+        width = max(10, self.contentsRect().width() - 16)
 
         # Enquanto se digita, a conta fica na linha grande; depois do "=",
         # ela sobe para a linha de cima e o resultado ocupa a linha grande.
         top = self._expression if self._result else ""
         metrics = QFontMetrics(self.expression_label.font())
-        top_width = max(10, width - self.angle_mode_label.sizeHint().width() - 8)
+        others = sum(
+            item.widget().sizeHint().width() + 8
+            for item in (self._top.itemAt(i) for i in range(self._top.count()))
+            if item.widget() is not None and item.widget() is not self.expression_label
+            and not item.widget().isHidden()
+        )
+        top_width = max(10, width - others)
         self.expression_label.setText(metrics.elidedText(top, Qt.TextElideMode.ElideLeft, top_width))
         self.expression_label.setToolTip(top)
 

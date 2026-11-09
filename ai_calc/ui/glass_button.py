@@ -4,7 +4,7 @@ cápsula que agrupa os botões do topo."""
 from __future__ import annotations
 
 from PySide6.QtCore import QRectF, QSize, Qt, QVariantAnimation
-from PySide6.QtGui import QFont, QPainter, QPainterPath
+from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPainterPath
 from PySide6.QtWidgets import QHBoxLayout, QPushButton, QSizePolicy, QWidget
 
 from .glass import capsule_radius, paint_focus_ring, paint_glass, with_alpha
@@ -45,11 +45,13 @@ class GlassButton(QPushButton):
         self.setAttribute(Qt.WidgetAttribute.WA_Hover)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
+        self._small = small
+        self.auto_font = False     # teclado: a fonte acompanha o tamanho da tecla
         font = QFont(self.font())
         font.setPointSize(11 if small else 16)
         if role in ("equals", "operator") and not small:
             font.setPointSize(19)
-            font.setWeight(QFont.Weight.DemiBold if role == "equals" else QFont.Weight.Medium)
+            font.setWeight(QFont.Weight.Medium)
         self.setFont(font)
 
         self._press_animation = QVariantAnimation(self)
@@ -60,6 +62,28 @@ class GlassButton(QPushButton):
     @property
     def role(self) -> str:
         return self._role
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
+        super().resizeEvent(event)
+        if self.auto_font:
+            self.fit_font()
+
+    def fit_font(self) -> None:
+        """Fonte proporcional à altura da tecla (números grandes, como na Apple)."""
+        height = self.height()
+        if self._small:
+            share, low, high = 0.34, 11, 22
+        elif self._role in ("operator", "equals"):
+            share, low, high = 0.50, 18, 40
+        else:
+            share, low, high = 0.42, 16, 34
+        font = QFont(self.font())
+        font.setPixelSize(int(max(low, min(high, height * share))))
+        # Rótulos longos (ex.: "sin⁻¹") diminuem até caber na largura.
+        width = self.width() - 16
+        while font.pixelSize() > low and QFontMetrics(font).horizontalAdvance(self.text()) > width:
+            font.setPixelSize(font.pixelSize() - 1)
+        self.setFont(font)
 
     # --- animações ---
     def _set_press(self, value: float) -> None:
