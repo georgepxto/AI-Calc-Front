@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import string
 
-from PySide6.QtCore import QEasingCurve, QPoint, QPropertyAnimation, Qt
+from PySide6.QtCore import QEasingCurve, QEvent, QPoint, QPropertyAnimation, Qt
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QHBoxLayout, QMainWindow, QStackedWidget, QVBoxLayout, QWidget
 
@@ -23,6 +23,8 @@ from .history_panel import HistoryPanel
 from .percentage_panel import PercentagePanel
 from .motion import fade_in
 from .keypad import (
+    COMMON_METRICS,
+    SCIENTIFIC_METRICS,
     ANGLE_MODE,
     BACKSPACE,
     PARENTHESES,
@@ -43,12 +45,16 @@ START_SIZE = (700, 640)
 COMMON_TAB = 0
 SCIENTIFIC_TAB = 1
 TRIG_TAB = 2
+OPERATOR_KEYS = ("+", "−", "×", "÷")
 TAB_NAMES = {COMMON_TAB: "comum", SCIENTIFIC_TAB: "cientifica", TRIG_TAB: "trigonometria"}
+
+OUTER_MARGIN = 16      # margem da janela e espaço até o painel do histórico
+SECTION_GAP = 12       # espaço entre topo, visor e teclado
 
 # Histórico: painel fixo ao lado quando a janela é larga; gaveta com botão quando é estreita.
 DOCK_MIN_WIDTH = 660
 PANEL_WIDTH = 280
-DRAWER_MS = 220
+DRAWER_MS = 340        # gaveta do histórico entra com uma mola leve
 
 # Caracteres aceitos do teclado físico (letras servem para digitar funções: sin, ln...).
 TYPED_CHARACTERS = (
@@ -95,11 +101,12 @@ class MainWindow(QMainWindow):
 
         # --- calculadora ---
         self.display = Display(self.theme, self)
-        self.common_keypad = Keypad(COMMON_KEYS, self.theme, self)
-        self.scientific_keypad = Keypad(SCIENTIFIC_KEYS, self.theme, self, key_min_height=34)
+        self.common_keypad = Keypad(COMMON_KEYS, self.theme, self, COMMON_METRICS)
+        self.scientific_keypad = Keypad(SCIENTIFIC_KEYS, self.theme, self, SCIENTIFIC_METRICS)
         for keypad in (self.common_keypad, self.scientific_keypad):
             keypad.inserted.connect(self.insert)
             keypad.action.connect(self.run_action)
+            keypad.laid_out.connect(self._align_display)
 
         self.trig_page = TrigPage(self.theme, self)
         self.trig_page.mode_toggle_requested.connect(lambda: self.run_action(ANGLE_MODE))
@@ -118,19 +125,21 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.calculator = QWidget(central)
+        self.calculator.installEventFilter(self)     # refaz as medidas do teclado ao mudar de tamanho
         column = QVBoxLayout(self.calculator)
         column.setContentsMargins(0, 0, 0, 0)
-        column.setSpacing(12)
+        column.setSpacing(SECTION_GAP)
         # Topo: abas (controle segmentado) e, numa cápsula ao lado, histórico e tema.
         self.tools = ToolGroup(self.theme, self.calculator)
         self.tools.add(self.history_button)
         self.tools.add(self.theme_button)
         top = QHBoxLayout()
         top.setSpacing(8)
+        self._top_row = top
         top.addWidget(self.tabs, 1)
         top.addWidget(self.tools, 0, Qt.AlignmentFlag.AlignTop)
         column.addLayout(top)
-        column.addWidget(self.display)
+        column.addWidget(self.display, 1)
 
         self.percentage_button = GlassButton("Porcentagem", self.theme, role="function", small=True, parent=self)
         self.percentage_button.setFixedSize(112, 28)
@@ -140,7 +149,8 @@ class MainWindow(QMainWindow):
         # Fica no canto de cima do visor (só na aba Comum), sem ocupar uma linha própria.
         self.display.add_tool(self.percentage_button)
 
-        column.addWidget(self.pages, 1)
+        column.addWidget(self.pages, 0)
+        self._column = column
 
         self.percentage_panel = PercentagePanel(self.theme, self.calculator)
         self.percentage_panel.value_chosen.connect(self.insert_percentage_value)
@@ -155,12 +165,14 @@ class MainWindow(QMainWindow):
         self.history_panel.show_entries(self.history.entries)
         self._drawer_animation = QPropertyAnimation(self.history_panel, b"pos", self)
         self._drawer_animation.setDuration(DRAWER_MS)
-        self._drawer_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        drawer_spring = QEasingCurve(QEasingCurve.Type.OutBack)
+        drawer_spring.setOvershoot(0.6)
+        self._drawer_animation.setEasingCurve(drawer_spring)
         self._drawer_animation.finished.connect(self._drawer_animation_finished)
 
         self._root = QHBoxLayout(central)
-        self._root.setContentsMargins(16, 14, 16, 16)
-        self._root.setSpacing(16)
+        self._root.setContentsMargins(OUTER_MARGIN, OUTER_MARGIN, OUTER_MARGIN, OUTER_MARGIN)
+        self._root.setSpacing(OUTER_MARGIN)
         self._root.addWidget(self.calculator, 1)
 
         self.confirm_dialog: ConfirmDialog | None = None
@@ -225,6 +237,10 @@ class MainWindow(QMainWindow):
     def _refresh(self) -> None:
         editor = self.editor
         self.display.show_state(editor.expression, editor.result, editor.message, editor.is_error)
+        # Como na Apple: o operador recém-escolhido fica destacado até a próxima tecla.
+        last = editor.expression[-1:] if not editor.result else ""
+        for keypad in (self.common_keypad, self.scientific_keypad):
+            keypad.set_selected(last if last in OPERATOR_KEYS else None)
 
     def _tab_changed(self, index: int) -> None:
         self.pages.setCurrentIndex(index)
@@ -233,6 +249,7 @@ class MainWindow(QMainWindow):
         # (o histórico continua na gaveta, pelo botão de relógio).
         self.display.setVisible(index != TRIG_TAB)
         self.percentage_button.setVisible(index == COMMON_TAB)
+        self._fit_keypad()
         if index != COMMON_TAB and self._percentage_open:
             self.close_percentage_panel()
         self._update_history_layout()
@@ -338,7 +355,9 @@ class MainWindow(QMainWindow):
         central = self.centralWidget()
         top = self.tabs.mapTo(central, QPoint(0, self.tabs.height())).y() + 8
         width = min(PANEL_WIDTH + 20, central.width() - 48)
-        rect = central.rect().adjusted(central.width() - width - 16, top, -16, -16)
+        rect = central.rect().adjusted(
+            central.width() - width - OUTER_MARGIN, top, -OUTER_MARGIN, -OUTER_MARGIN
+        )
         return rect
 
     def _update_history_layout(self) -> None:
@@ -415,7 +434,52 @@ class MainWindow(QMainWindow):
     def resizeEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
         super().resizeEvent(event)
         self._update_history_layout()
+        self._fit_keypad()
         self._update_percentage_layout()
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802 (nome do Qt)
+        if watched is getattr(self, "calculator", None) and event.type() == QEvent.Type.Resize:
+            self._fit_keypad()
+        return super().eventFilter(watched, event)
+
+    # --- medidas (teclado embaixo, visor ocupa o resto) -------------------------
+    def _fit_keypad(self) -> None:
+        """Teclado com a altura exata das teclas; o espaço que sobra fica com o visor,
+        que encosta o número no teclado (como na Apple). Na Trigonometria, a aba ocupa tudo."""
+        if not hasattr(self, "_column"):
+            return
+        if self.tabs.currentIndex() == TRIG_TAB:
+            self._top_row.setContentsMargins(0, 0, 0, 0)
+            self.pages.setMinimumHeight(0)
+            self.pages.setMaximumHeight(16777215)
+            self._column.setStretchFactor(self.pages, 1)
+            return
+        self._column.setStretchFactor(self.pages, 0)
+        keypad = self.current_keypad
+        width = self.calculator.width()
+        room = (
+            self.calculator.height() - self.tabs.sizeHint().height()
+            - 2 * SECTION_GAP - self.display.minimumSizeHint().height() - 2
+        )
+        height = max(keypad.minimumSizeHint().height(), keypad.grid_height(width, room))
+        if self.pages.height() != height or self.pages.maximumHeight() != height:
+            self.pages.setFixedHeight(height)
+
+    def _align_display(self) -> None:
+        """Alinha a borda direita do número com a borda direita das teclas."""
+        keypad = self.current_keypad
+        if not isinstance(keypad, Keypad):
+            return
+        grid = keypad.grid_rect
+        left = int(grid.left())
+        right = int(keypad.width() - grid.right())
+        self.display.set_side_margins(left, right)
+        # O topo também acompanha as bordas das teclas (desde que as abas caibam).
+        room = self.calculator.width() - self.tabs.sizeHint().width() - self.tools.sizeHint().width() - 8
+        if left + right > room:
+            left = right = max(0, room // 2)
+        if self.tabs.currentIndex() != TRIG_TAB:
+            self._top_row.setContentsMargins(left, 0, right, 0)
 
     # --- teclado físico ------------------------------------------------------
     def keyPressEvent(self, event: QKeyEvent) -> None:  # noqa: N802 (nome do Qt)

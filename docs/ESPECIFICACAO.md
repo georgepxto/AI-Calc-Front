@@ -206,3 +206,10 @@ Funções exigem parênteses (`sin 30` mostra "Use parênteses: sin(30)").
 - Visor sem caixa; o botão Porcentagem foi da linha abaixo do visor para o canto de cima do visor.
 - Abas como controle segmentado com lente deslizante (260 ms); histórico e tema numa cápsula no
   topo; histórico como lista com divisórias.
+- Teclas com tamanho limitado (Comum: círculos de até 64 px; Científica: cápsulas de até 48 px de
+  altura), bloco centralizado e encostado embaixo; o número do visor e o topo alinham com as bordas
+  das teclas.
+- Animações no estilo do iOS 26 (substituem "a tecla encolhe 4%" da Etapa 3C): a tecla estufa 7%
+  ao apertar e volta com efeito de mola; o operador escolhido fica destacado (fundo claro, símbolo
+  laranja) até a próxima tecla; lente das abas e gaveta do histórico com mola. Com "reduzir
+  movimento", tudo é instantâneo.

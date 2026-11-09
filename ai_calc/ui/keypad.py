@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import QTimer, Signal
-from PySide6.QtWidgets import QGridLayout, QPushButton, QWidget
+from PySide6.QtCore import QRectF, QSize, QTimer, Signal
+from PySide6.QtWidgets import QPushButton, QWidget
 
 from .glass_button import GlassButton
 from .theme import ThemeManager
@@ -116,41 +116,107 @@ SCIENTIFIC_KEYS: tuple[tuple[Key, ...], ...] = (
 )
 
 
-KEY_GAP = 10      # espaço entre as teclas (separa as cápsulas, como na Apple)
+@dataclass(frozen=True)
+class KeypadMetrics:
+    """Medidas do teclado (como na calculadora da Apple: teclas de tamanho limitado,
+    espaço fixo entre elas e o bloco todo encostado embaixo, centralizado)."""
+
+    max_key: int        # altura máxima de uma tecla (diâmetro do círculo)
+    gap: int            # espaço entre as teclas
+    aspect: float       # largura / altura de uma tecla (1 = círculo)
+    min_key: int        # altura mínima (abaixo disso o teclado não encolhe)
+
+
+COMMON_METRICS = KeypadMetrics(max_key=64, gap=12, aspect=1.0, min_key=44)
+SCIENTIFIC_METRICS = KeypadMetrics(max_key=48, gap=8, aspect=1.45, min_key=30)
+
+# Folga em volta de cada tecla: espaço para a sombra e para a tecla "estufar" ao apertar.
+KEY_PAD = 4
 
 
 class Keypad(QWidget):
-    """Grade de teclas. Emite o texto a inserir ou a ação escolhida."""
+    """Teclas em grade. Emite o texto a inserir ou a ação escolhida."""
 
     inserted = Signal(str)
     action = Signal(str)
+    laid_out = Signal()         # as teclas mudaram de lugar (o visor se alinha a elas)
 
     def __init__(
         self,
         rows: tuple[tuple[Key, ...], ...],
         theme: ThemeManager,
         parent: QWidget | None = None,
-        key_min_height: int = 44,
+        metrics: KeypadMetrics = COMMON_METRICS,
     ) -> None:
         super().__init__(parent)
         self._theme = theme
         self._buttons: dict[str, QPushButton] = {}
-        self._key_min_height = key_min_height
-        grid = QGridLayout(self)
-        grid.setContentsMargins(0, 0, 0, 0)
-        grid.setSpacing(KEY_GAP)
+        self._metrics = metrics
+        self._rows = len(rows)
+        self._columns = max(sum(key.column_span for key in row) for row in rows)
+        self._cells: list[tuple[QPushButton, int, int, int]] = []    # botão, linha, coluna, largura
+        self._grid = QRectF()
         for row_index, row in enumerate(rows):
             column = 0
             for key in row:
                 button = self._make_button(key)
-                grid.addWidget(button, row_index, column, 1, key.column_span)
+                self._cells.append((button, row_index, column, key.column_span))
                 column += key.column_span
+        self.setMinimumSize(self.minimumSizeHint())
+
+    # --- medidas ---
+    def _key_size(self, width: float, height: float) -> tuple[int, int]:
+        """Altura e largura de uma tecla para caber em width × height."""
+        m = self._metrics
+        cols, rows = self._columns, self._rows
+        room_w = width - 2 * KEY_PAD - (cols - 1) * m.gap
+        room_h = height - 2 * KEY_PAD - (rows - 1) * m.gap
+        key_h = int(min(m.max_key, room_h / rows, room_w / (cols * m.aspect)))
+        key_h = max(m.min_key, key_h)
+        key_w = int(min(key_h * m.aspect, room_w / cols))
+        return key_h, key_w
+
+    def grid_height(self, width: float, height: float) -> int:
+        """Altura que as teclas ocupam (com a folga) numa área width × height."""
+        key_h, _ = self._key_size(width, height)
+        return self._rows * key_h + (self._rows - 1) * self._metrics.gap + 2 * KEY_PAD
+
+    def minimumSizeHint(self) -> QSize:  # noqa: N802 (nome do Qt)
+        m = self._metrics
+        key_w = 48
+        width = self._columns * key_w + (self._columns - 1) * m.gap + 2 * KEY_PAD
+        height = self._rows * m.min_key + (self._rows - 1) * m.gap + 2 * KEY_PAD
+        return QSize(width, height)
+
+    @property
+    def grid_rect(self) -> QRectF:
+        """Retângulo das teclas (sem a folga), em coordenadas do teclado."""
+        return QRectF(self._grid)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 (nome do Qt)
+        super().resizeEvent(event)
+        self._place_keys()
+
+    def _place_keys(self) -> None:
+        m = self._metrics
+        key_h, key_w = self._key_size(self.width(), self.height())
+        grid_w = self._columns * key_w + (self._columns - 1) * m.gap
+        grid_h = self._rows * key_h + (self._rows - 1) * m.gap
+        left = round((self.width() - grid_w) / 2)
+        top = self.height() - KEY_PAD - grid_h          # encostado embaixo
+        self._grid = QRectF(left, top, grid_w, grid_h)
+        for button, row, column, span in self._cells:
+            x = left + column * (key_w + m.gap)
+            y = top + row * (key_h + m.gap)
+            w = span * key_w + (span - 1) * m.gap
+            button.setGeometry(x - KEY_PAD, y - KEY_PAD, w + 2 * KEY_PAD, key_h + 2 * KEY_PAD)
+        self.laid_out.emit()
 
     def _make_button(self, key: Key) -> QPushButton:
         button = GlassButton(key.label, self._theme, key.role, key.small, self)
         button.setAccessibleName(key.accessible_name)
         button.setToolTip(key.accessible_name)
-        button.setMinimumSize(48, self._key_min_height)
+        button.pad = KEY_PAD
         button.auto_font = True
         if key.action == BACKSPACE:
             button.setAutoRepeat(True)
@@ -184,3 +250,9 @@ class Keypad(QWidget):
         button.setDown(True)
         # O botão é o "contexto": se a janela fechar antes, o timer é cancelado.
         QTimer.singleShot(110, button, lambda: button.setDown(False))
+
+    def set_selected(self, key: str | None) -> None:
+        """Destaca o operador escolhido (como na Apple) até a próxima tecla."""
+        for name, button in self._buttons.items():
+            if isinstance(button, GlassButton) and button.role == "operator":
+                button.set_selected(name == key)

@@ -13,7 +13,7 @@ from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from .glass import with_alpha
 from .theme import ThemeManager
 
-RESULT_POINT_SIZE = 54
+RESULT_POINT_SIZE = 50
 RESULT_MIN_POINT_SIZE = 16
 CHIP_PADDING = (9, 4)       # folga do chip DEG/RAD (lados, cima/baixo)
 
@@ -48,15 +48,16 @@ class Display(QFrame):
         self.message_label = QLabel(self)
         self.message_label.setObjectName("message")
         self.message_label.setAccessibleName("Mensagem")
-        self.message_label.setWordWrap(True)
 
         self.angle_mode_label = QLabel("DEG", self)
         self.angle_mode_label.setObjectName("angleMode")
         self.angle_mode_label.setAccessibleName("Modo de ângulo")
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setContentsMargins(4, 0, 4, 0)
         layout.setSpacing(2)
+        layout.addStretch(1)       # o número fica embaixo, encostado no teclado
+        self._layout = layout
         top = QHBoxLayout()
         top.setSpacing(8)
         self._top = top
@@ -70,13 +71,16 @@ class Display(QFrame):
         layout.addWidget(self.result_label)
         layout.addWidget(self.message_label)
         self.expression_label.setMinimumHeight(20)
-        self.result_label.setMinimumHeight(72)
-        self.message_label.setMinimumHeight(20)
 
         _point_size(self.expression_label, 12)
         _point_size(self.angle_mode_label, 9, bold=True)
         _point_size(self.result_label, RESULT_POINT_SIZE, light=True)
         _point_size(self.message_label, 10)
+        # Alturas fixas: o visor não cresce quando aparece uma mensagem, e a janela
+        # pode reservar o espaço exato dele ao medir o teclado.
+        self.result_label.setFixedHeight(QFontMetrics(self.result_label.font()).height())
+        self.message_label.setFixedHeight(20)
+        self.message_label.setWordWrap(False)
         theme.changed.connect(self.apply_colors)
         self.apply_colors()
 
@@ -106,6 +110,13 @@ class Display(QFrame):
         path.addRoundedRect(chip, chip.height() / 2, chip.height() / 2)
         painter.fillPath(path, with_alpha(theme.hex("text_muted"), 0.12))
 
+    def set_side_margins(self, left: int, right: int) -> None:
+        """Margens dos lados (o número alinha com a borda das teclas)."""
+        margins = self._layout.contentsMargins()
+        if (margins.left(), margins.right()) != (left, right):
+            self._layout.setContentsMargins(left, margins.top(), right, margins.bottom())
+            self._refresh()
+
     def add_tool(self, widget: QWidget) -> None:
         """Põe um botão pequeno no canto de cima, ao lado do modo de ângulo."""
         self._top.insertWidget(1, widget, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -130,7 +141,7 @@ class Display(QFrame):
         self._refresh()
 
     def _refresh(self) -> None:
-        width = max(10, self.contentsRect().width() - 16)
+        width = max(10, self.contentsRect().width() - self._layout.contentsMargins().left() - self._layout.contentsMargins().right())
 
         # Enquanto se digita, a conta fica na linha grande; depois do "=",
         # ela sobe para a linha de cima e o resultado ocupa a linha grande.

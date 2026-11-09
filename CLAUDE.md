@@ -157,7 +157,7 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
   "=" por serem texto grande (WCAG), e 4,5:1 continua valendo para o resto.
 - `glass.py`: `paint_glass` com sombra difusa em camadas, borda especular e reflexo fino embaixo
   (só em teclas largas); `capsule_radius` limita o raio à metade da altura.
-- `tabs.py`: controle segmentado com lente deslizante (`LENS_MS` 260 ms; instantâneo com
+- `tabs.py`: controle segmentado com lente deslizante com mola (`LENS_MS` 380 ms; instantâneo com
   "reduzir movimento"); contorno de foco só quando o foco veio do teclado.
 - `glass_button.py`: `flat=True` para botões sobre outra superfície; `ToolGroup` (cápsula do topo
   com histórico e tema); `auto_font`/`fit_font`: fonte proporcional à altura da tecla.
@@ -165,8 +165,17 @@ Rodar com `.venv\Scripts\python -m ai_calc` e `.venv\Scripts\python -m pytest`.
   A tecla `( )` (ação `PARENTHESES`) chama `ExpressionEditor.parenthesis()` no core: fecha se há
   parêntese aberto e a conta termina em número, `)`, `!`, `%`, `π` ou `e`; senão abre. Científica:
   três linhas de funções e uma coluna de funções (`( ) ; e π`) à esquerda do mesmo teclado.
-- Visor sem caixa (número em 54 pt leve, direto sobre o fundo); Porcentagem e DEG/RAD em chips no
+- Visor sem caixa (número em 50 pt leve, direto sobre o fundo); Porcentagem e DEG/RAD em chips no
   canto de cima do visor (`Display.add_tool`).
+- Medidas (`keypad.py`, `KeypadMetrics`): teclas de tamanho limitado (Comum: círculos de até 64 px,
+  12 px entre elas; Científica: cápsulas 1,45 × a altura, de 30 a 48 px, 8 px entre elas), bloco
+  centralizado e encostado embaixo; `KEY_PAD` (4 px) de folga em volta de cada tecla para a sombra
+  e o "estufar". `MainWindow._fit_keypad` dá ao teclado a altura exata das teclas e o resto ao
+  visor (número encostado nas teclas); `_align_display` alinha visor e topo às bordas das teclas.
+- Animações: tecla estufa 7% em 60 ms ao apertar e volta com mola (`OutBack`, 420 ms); operador
+  escolhido fica com fundo claro e símbolo laranja até a próxima tecla (`operator_selected_bg`,
+  `Keypad.set_selected`); lente das abas e gaveta do histórico com mola. Tudo some com
+  "reduzir movimento".
 - Histórico: lista com divisórias num painel só; como gaveta, tem base sólida (sem "fantasmas").
 
 ## Interface (Etapas 3 e 4)

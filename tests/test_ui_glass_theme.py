@@ -62,7 +62,7 @@ def test_contraste_das_teclas_e_abas(tema, papel):
     fundo, apertado, texto, opacidade, foco = ROLE_COLORS[papel]
     preenchimentos = {fundo, apertado} | ({"equals_hover"} if papel == "equals" else set())
     minimo_texto = UI_MIN if papel == "theme" else TEXT_MIN     # no botão de tema o "texto" é o ícone
-    if papel in ("operator", "equals"):
+    if papel in ("operator", "operator_selected", "equals"):
         # Símbolos grandes (a partir de 18 px de altura): a WCAG pede 3:1 para texto grande.
         minimo_texto = LARGE_TEXT_MIN
     for chave in preenchimentos:

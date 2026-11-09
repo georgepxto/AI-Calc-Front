@@ -56,12 +56,14 @@ etapas pequenas, cada uma com testes automáticos.
   com símbolo branco na última coluna e `( ) 0 , =` embaixo. A tecla `( )` abre ou fecha o
   parêntese conforme a conta. Na Científica, três linhas de funções em cima e uma coluna de
   funções à esquerda do mesmo teclado.
+- Animações como as da Apple: a tecla estufa ao apertar e volta com efeito de mola, e o operador
+  escolhido fica destacado até a próxima tecla.
 - Abas num controle segmentado, com a aba escolhida numa "lente" que desliza até ela; os botões
   de histórico e de tema ficam juntos numa cápsula ao lado. O botão Porcentagem fica no visor.
 - Transição de tema de 450 ms. Um segundo clique no meio da transição a faz voltar do ponto em
   que estava.
 - Abre seguindo o tema do Windows. Depois de escolhido no botão de lua/sol, vale o tema escolhido.
-- Animações discretas de clique e de troca de aba. Com "reduzir movimento" ligado no Windows,
+- Com "reduzir movimento" ligado no Windows,
   tudo fica instantâneo.
 
 **Histórico e preferências**

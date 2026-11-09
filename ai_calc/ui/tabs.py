@@ -16,7 +16,8 @@ from .theme import ROLE_COLORS, ThemeManager
 TAB_PADDING = 8
 TAB_HEIGHT = 40
 TAB_INSET = 3          # espaço entre a borda da cápsula e a lente
-LENS_MS = 260          # deslize da lente até a opção escolhida
+LENS_MS = 380          # deslize da lente até a opção escolhida (com mola, como no iOS 26)
+LENS_OVERSHOOT = 0.9   # quanto a lente passa do ponto antes de assentar
 
 
 class GlassTabBar(QTabBar):
@@ -34,7 +35,9 @@ class GlassTabBar(QTabBar):
         self._lens: QRectF | None = None        # posição da lente durante o deslize
         self._lens_animation = QVariantAnimation(self)
         self._lens_animation.setDuration(LENS_MS)
-        self._lens_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        spring = QEasingCurve(QEasingCurve.Type.OutBack)
+        spring.setOvershoot(LENS_OVERSHOOT)
+        self._lens_animation.setEasingCurve(spring)
         self._lens_animation.valueChanged.connect(self._set_lens)
         self._lens_animation.finished.connect(self._lens_done)
         self._last_index = -1

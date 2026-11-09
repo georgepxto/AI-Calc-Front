@@ -52,3 +52,57 @@ def test_botoes_do_topo_ficam_na_capsula(qtbot):
     window = _janela(qtbot, movimento=False)
     assert window.theme_button.parent() is window.tools
     assert window.history_button.parent() is window.tools
+
+
+def test_operador_escolhido_fica_destacado(qtbot):
+    window = _janela(qtbot, movimento=False)
+    teclado = window.common_keypad
+    window.insert("1")
+    window.insert("×")
+    assert teclado.button("×").selected
+    assert not teclado.button("+").selected
+    window.insert("2")                       # a próxima tecla tira o destaque
+    assert not teclado.button("×").selected
+
+
+def test_destaque_some_depois_do_igual(qtbot):
+    window = _janela(qtbot, movimento=False)
+    for tecla in "2+":
+        window.insert(tecla)
+    window.run_action(EVALUATE)
+    window.insert("3")
+    window.run_action(EVALUATE)
+    assert not window.common_keypad.button("+").selected
+
+
+def test_teclas_redondas_e_alinhadas(qtbot):
+    from ai_calc.ui.keypad import COMMON_METRICS, KEY_PAD
+
+    window = _janela(qtbot, movimento=False)
+    window.resize(420, 760)
+    qtbot.wait(20)
+    teclado = window.common_keypad
+    sete = teclado.button("7")
+    lado = sete.width() - 2 * KEY_PAD
+    assert lado == sete.height() - 2 * KEY_PAD               # círculo
+    assert lado <= COMMON_METRICS.max_key                    # tamanho limitado
+    grade = teclado.grid_rect
+    assert grade.bottom() + KEY_PAD == teclado.height()      # encostado embaixo
+    # O número do visor termina na mesma borda das teclas.
+    direita_visor = window.display.width() - window.display.layout().contentsMargins().right()
+    assert abs(direita_visor - grade.right()) <= 1
+
+
+def test_teclado_cabe_na_janela_em_varios_tamanhos(qtbot):
+    from ai_calc.ui.main_window import MIN_HEIGHT, MIN_WIDTH
+
+    window = _janela(qtbot, movimento=False)
+    for aba in (0, 1):
+        window.tabs.setCurrentIndex(aba)
+        for tamanho in ((MIN_WIDTH, MIN_HEIGHT), (700, 640), (1100, 820)):
+            window.resize(*tamanho)
+            for tecla in "2(3+4)":
+                window.insert(tecla)
+            window.run_action(EVALUATE)        # aparece "Interpretado como", que não pode empurrar o teclado
+            qtbot.wait(20)
+            assert window.pages.geometry().bottom() < window.calculator.height(), (aba, tamanho)

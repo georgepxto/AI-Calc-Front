@@ -58,6 +58,7 @@ PALETTES: dict[str, dict[str, str]] = {
         "operator_bg": "#CC5E00",
         "operator_pressed": "#A84C00",
         "operator_text": "#FFFFFF",
+        "operator_selected_bg": "#FFFFFF",
         "function_bg": "#EAEAEF",
         "function_pressed": "#CFCFD5",
         "action_bg": "#D1D1D6",
@@ -98,6 +99,7 @@ PALETTES: dict[str, dict[str, str]] = {
         "operator_bg": "#BF5600",
         "operator_pressed": "#9E4700",
         "operator_text": "#FFFFFF",
+        "operator_selected_bg": "#F2F2F7",
         "function_bg": "#1F1F21",
         "function_pressed": "#2E2E31",
         "action_bg": "#5C5C5F",
@@ -129,6 +131,10 @@ PALETTES: dict[str, dict[str, str]] = {
 ROLE_COLORS: dict[str, tuple[str, str, str, float, str]] = {
     "digit": ("key_bg", "key_pressed", "text", KEY_ALPHA, "focus"),
     "operator": ("operator_bg", "operator_pressed", "operator_text", ACCENT_ALPHA, "focus_on_accent"),
+    # Operador escolhido (destaque da Apple): fundo claro com o símbolo na cor do operador.
+    "operator_selected": (
+        "operator_selected_bg", "operator_selected_bg", "operator_bg", ACCENT_ALPHA, "focus_on_accent",
+    ),
     "function": ("function_bg", "function_pressed", "text", FUNCTION_ALPHA, "focus"),
     "action": ("action_bg", "action_pressed", "text", KEY_ALPHA, "focus"),
     "equals": ("equals_bg", "equals_pressed", "equals_text", ACCENT_ALPHA, "focus_on_accent"),
